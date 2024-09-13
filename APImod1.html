@@ -1,0 +1,313 @@
+<html><head><base href="https://api-explorer.example.com/">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cool API Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Comic+Sans+MS&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary-color: #ff6b6b;
+    --secondary-color: #4ecdc4;
+    --accent-color: #45b7d1;
+    --bg-color: #f7f7f7;
+    --text-color: #333;
+  }
+
+  body {
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+  .container {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    width: 95%;
+    max-width: 1000px;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    text-shadow: 2px 2px var(--accent-color);
+    text-align: center;
+    margin-bottom: 2rem;
+    letter-spacing: 2px;
+  }
+
+  .input-group {
+    margin-bottom: 1.5rem;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--primary-color);
+    font-weight: bold;
+  }
+
+  input[type="text"], textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid var(--secondary-color);
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+  }
+
+  input[type="text"]:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+  }
+
+  button {
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    font-size: 1.2rem;
+    background-color: var(--accent-color);
+    border: none;
+    border-radius: 25px;
+    padding: 0.8rem 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: bold;
+  }
+
+  button:hover {
+    transform: scale(1.05);
+  }
+
+  #output {
+    margin-top: 2rem;
+    padding: 1rem;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 5px;
+    white-space: pre-wrap;
+    overflow-x: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .loading {
+    text-align: center;
+    margin-top: 1rem;
+  }
+
+  .loading svg {
+    width: 50px;
+    height: 50px;
+  }
+
+  @keyframes rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .rotate {
+    animation: rotate 2s linear infinite;
+  }
+
+  .hidden {
+    display: none;
+  }
+
+  .api-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .api-item {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 0.7rem 1.2rem;
+    border-radius: 25px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    user-select: none;
+  }
+
+  .api-item:hover {
+    background-color: var(--accent-color);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  }
+
+  .notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 20px;
+    border-radius: 5px;
+    color: white;
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .notification.show {
+    opacity: 1;
+  }
+
+  .notification.success {
+    background-color: var(--success-color);
+  }
+
+  .notification.error {
+    background-color: var(--error-color);
+  }
+
+  body.dark-theme {
+    --bg-color: #1a1a1a;
+    --text-color: #f0f0f0;
+    --primary-color: #3498db;
+    --secondary-color: #2c3e50;
+  }
+
+  body.dark-theme .container {
+    background-color: #2c2c2c;
+  }
+
+  body.dark-theme input[type="text"], 
+  body.dark-theme textarea {
+    background-color: #3a3a3a;
+    color: #f0f0f0;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Cool API Explorer</h1>
+    
+    <div class="api-list">
+      <div class="api-item" data-api="openai">AI Chat</div>
+      <div class="api-item" data-api="weather">Weather</div>
+      <div class="api-item" data-api="spotify">Music</div>
+    </div>
+
+    <div class="input-group">
+      <label for="api-key">API Key:</label>
+      <input type="text" id="api-key" placeholder="Enter your API key">
+    </div>
+
+    <div class="input-group">
+      <label for="prompt">Ask a Question:</label>
+      <textarea id="prompt" rows="3" placeholder="What do you want to know?"></textarea>
+    </div>
+
+    <button id="submit-btn">Let's Go!</button>
+
+    <div class="loading hidden">
+      <svg class="rotate" viewBox="0 0 50 50">
+        <circle cx="25" cy="25" r="20" fill="none" stroke="#3498db" stroke-width="5" />
+      </svg>
+    </div>
+
+    <pre id="output" class="hidden"></pre>
+  </div>
+
+  <div class="notification" id="notification"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+  <script>
+    const apiKeyInput = document.getElementById('api-key');
+    const promptInput = document.getElementById('prompt');
+    const submitBtn = document.getElementById('submit-btn');
+    const output = document.getElementById('output');
+    const loading = document.querySelector('.loading');
+    const apiItems = document.querySelectorAll('.api-item');
+
+    let selectedApi = null;
+
+    apiItems.forEach(item => {
+      item.addEventListener('click', () => {
+        apiItems.forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        selectedApi = item.dataset.api;
+        updatePromptPlaceholder();
+      });
+    });
+
+    function updatePromptPlaceholder() {
+      switch (selectedApi) {
+        case 'openai':
+          promptInput.placeholder = 'Ask the AI anything!';
+          break;
+        case 'weather':
+          promptInput.placeholder = 'Enter a city name';
+          break;
+        case 'spotify':
+          promptInput.placeholder = 'Enter a song or artist name';
+          break;
+        default:
+          promptInput.placeholder = 'What do you want to know?';
+      }
+    }
+
+    submitBtn.addEventListener('click', async () => {
+      const apiKey = apiKeyInput.value;
+      const promptText = promptInput.value;
+
+      if (!apiKey || !promptText || !selectedApi) {
+        alert('Please enter your API key, choose an API, and type your question!');
+        return;
+      }
+
+      loading.classList.remove('hidden');
+      output.classList.add('hidden');
+
+      try {
+        let response;
+        switch (selectedApi) {
+          case 'openai':
+            response = await axios.post('https://api.openai.com/v1/chat/completions', {
+              model: "gpt-3.5-turbo",
+              messages: [
+                { role: "user", content: promptText }
+              ],
+              max_tokens: 150
+            }, {
+              headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            output.textContent = response.data.choices[0].message.content;
+            break;
+          case 'weather':
+            response = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${promptText}&appid=${apiKey}&units=metric`);
+            output.textContent = `Weather in ${response.data.name}: ${response.data.weather[0].description}, Temperature: ${response.data.main.temp}°C`;
+            break;
+          case 'spotify':
+            response = await axios.get(`https://api.spotify.com/v1/search?q=${promptText}&type=track,artist`, {
+              headers: {
+                'Authorization': `Bearer ${apiKey}`
+              }
+            });
+            const track = response.data.tracks.items[0];
+            output.textContent = `Top result: "${track.name}" by ${track.artists[0].name}`;
+            break;
+        }
+      } catch (error) {
+        output.textContent = `Oops! Something went wrong: ${error.message}`;
+      } finally {
+        loading.classList.add('hidden');
+        output.classList.remove('hidden');
+      }
+    });
+  </script>
+</body>
+</html>
