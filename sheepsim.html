@@ -1,0 +1,959 @@
+<html>
+
+<head>
+  <base href="https://websim.ai/" />
+  <meta charset="utf-8" />
+  <title>Interactive Terrain with Improved Sheep Flocking</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    #instructions {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.8);
+      color: #000;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      border-radius: 5px;
+      max-width: 300px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="instructions">
+    <strong>Instructions:</strong>
+    <ul>
+      <li>Click on a sheep to select it.</li>
+      <li>Use <strong>WASD</strong> keys to move the sheep.</li>
+      <li>Press <strong>Space</strong> to make the sheep hop.</li>
+      <li>Press <strong>Escape</strong> to stop following the sheep.</li>
+      <li>Use mouse to orbit and zoom in/out.</li>
+    </ul>
+  </div>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.168.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.168.0/examples/jsm/",
+        "cannon-es": "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js",
+        "dat.gui": "https://unpkg.com/dat.gui@0.7.7/build/dat.gui.module.js"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as dat from "dat.gui";
+    import * as THREE from "three";
+    import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+    import { ImprovedNoise } from "three/addons/math/ImprovedNoise.js";
+    import * as CANNON from "cannon-es";
+
+    const settings = {
+      debug: false,
+      gravity: -20, // m/s²
+    };
+
+    // Create a Three.js scene
+    const scene = new THREE.Scene();
+
+    // Create a physics world
+    const world = new CANNON.World({
+      gravity: new CANNON.Vec3(0, settings.gravity, 0), // m/s²
+    });
+    world.broadphase = new CANNON.SAPBroadphase(world);
+    world.allowSleep = true;
+
+    // Create materials
+    const defaultMaterial = new CANNON.Material("default");
+    const sheepMaterial = new CANNON.Material("sheep");
+    const groundMaterial = new CANNON.Material("ground");
+
+    // Increase friction between sheep and the ground
+    const sheepGroundContactMaterial = new CANNON.ContactMaterial(
+      sheepMaterial,
+      groundMaterial,
+      {
+        friction: 1.0, // Increased friction
+        restitution: 0.0,
+      }
+    );
+    world.addContactMaterial(sheepGroundContactMaterial);
+    world.defaultContactMaterial.friction = 0.3;
+
+    // dat.gui enable debug
+    const gui = new dat.GUI();
+    gui.add(settings, "debug").name("Debug");
+    gui
+      .add(settings, "gravity")
+      .name("Gravity")
+      .min(-100)
+      .max(100)
+      .step(0.1)
+      .onChange((value) => {
+        world.gravity.set(0, value, 0);
+      });
+
+    const worldResolution = 512,
+      worldSize = 1000;
+
+    // Add fog for depth perception
+    scene.fog = new THREE.Fog(0xcccccc, 600, worldSize);
+
+    // Create camera
+    const camera = new THREE.PerspectiveCamera(
+      60,
+      window.innerWidth / window.innerHeight,
+      1,
+      2000
+    );
+    camera.position.set(0, 100, 400); // Start the initial camera twice as close
+
+    // Create a renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x87ceeb); // Light sky blue background
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+
+    // Add controls
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.maxPolarAngle = Math.PI / 2.1;
+    controls.minDistance = 10;
+    controls.maxDistance = 1000;
+
+    // Add ambient light
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+    scene.add(ambientLight);
+
+    // Add directional sunlight
+    const sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    sunLight.position.set(100, 200, 100);
+    sunLight.castShadow = true;
+    sunLight.shadow.camera.left = -500;
+    sunLight.shadow.camera.right = 500;
+    sunLight.shadow.camera.top = 500;
+    sunLight.shadow.camera.bottom = -500;
+    sunLight.shadow.camera.near = 0.5;
+    sunLight.shadow.camera.far = 1500;
+    sunLight.shadow.mapSize.width = 2048;
+    sunLight.shadow.mapSize.height = 2048;
+    scene.add(sunLight);
+
+    // Generate terrain using Perlin noise with additional layers
+    const data = generateHeight(worldResolution, worldResolution);
+
+    const geometry = new THREE.PlaneGeometry(
+      worldSize,
+      worldSize,
+      worldResolution - 1,
+      worldResolution - 1
+    );
+    geometry.rotateX(-Math.PI / 2);
+
+    const vertices = geometry.attributes.position.array;
+
+    for (let i = 0, j = 0, l = vertices.length; i < l; i++, j += 3) {
+      vertices[j + 1] = data[i]; // Adjusted vertical scale
+    }
+
+    // Compute normals for realistic shading
+    geometry.computeVertexNormals();
+
+    // Create texture with realistic colors
+    const texture = new THREE.CanvasTexture(
+      generateTexture(data, worldResolution, worldResolution)
+    );
+    texture.wrapS = THREE.ClampToEdgeWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+
+    // Use a material with better shading
+    const material = new THREE.MeshStandardMaterial({
+      map: texture,
+      roughness: 0.8,
+      metalness: 0.2,
+    });
+
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.receiveShadow = true;
+    scene.add(mesh);
+
+    // Prepare the height data for Cannon.js Heightfield
+    const matrix = [];
+    for (let i = 0; i < worldResolution; i++) {
+      const row = [];
+      for (let j = 0; j < worldResolution; j++) {
+        row.push(data[i * worldResolution + j]);
+      }
+      matrix.push(row);
+    }
+
+    // Create the heightfield shape
+    const terrainShape = new CANNON.Heightfield(matrix, {
+      elementSize: worldSize / (worldResolution - 1),
+    });
+
+    // Create the body and add the shape
+    const terrainBody = new CANNON.Body({
+      mass: 0,
+      material: groundMaterial,
+    });
+    terrainBody.addShape(terrainShape);
+    terrainBody.position.set(-worldSize / 2, 0, -worldSize / 2);
+    terrainBody.quaternion.setFromEuler(
+      -Math.PI / 2,
+      0,
+      -Math.PI / 2,
+      "XYZ"
+    );
+    world.addBody(terrainBody);
+
+    const trunkMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
+    const leavesMaterial = new THREE.MeshStandardMaterial({
+      color: 0x228b22,
+    });
+    const rockMaterial = new THREE.MeshStandardMaterial({ color: 0x808080 });
+
+    const numTrees = 2000;
+
+    function createTreeWithPhysics(x, y, z, scale) {
+      const tree = createTree();
+      tree.position.set(x, y, z);
+      tree.scale.set(scale, scale, scale);
+      tree.traverse(function (child) {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+        }
+      });
+      scene.add(tree);
+    }
+
+    function createRockWithPhysics(x, y, z, scale) {
+      const rock = createRock();
+      rock.position.set(x, y, z);
+      rock.scale.set(scale, scale, scale);
+      rock.castShadow = true;
+      rock.receiveShadow = true;
+      scene.add(rock);
+    }
+
+    for (let i = 0; i < numTrees; i++) {
+      const x = Math.random() * 2700 - 1350;
+      const z = Math.random() * 2700 - 1350;
+
+      const y = getYPosition(x, z, data, worldResolution, worldResolution);
+      const slope = getSlope(x, z, data, worldResolution, worldResolution);
+
+      if (y > 2 && slope < 0.6) {
+        const scale = 0.5 + Math.random() * 0.5;
+        createTreeWithPhysics(x, y, z, scale);
+      } else if (slope >= 0.6 && slope < 1.0 && Math.random() < 0.3) {
+        const scale = 0.5 + Math.random() * 0.5;
+        createTreeWithPhysics(x, y, z, scale);
+      } else if (slope >= 1.0 && Math.random() < 0.1) {
+        const scale = 0.5 + Math.random() * 0.5;
+        createRockWithPhysics(x, y, z, scale);
+      }
+    }
+
+    function generateHeight(width, height) {
+      const size = width * height,
+        data = new Float32Array(size);
+      const perlin = new ImprovedNoise();
+      let quality = 1;
+      const z = Math.random() * 100;
+
+      for (let j = 0; j < 6; j++) {
+        for (let i = 0; i < size; i++) {
+          const x = i % width,
+            y = ~~(i / width);
+          data[i] +=
+            perlin.noise(x / quality, y / quality, z) * quality * 1.5;
+        }
+        quality *= 2.5;
+      }
+
+      for (let i = 0; i < size; i++) {
+        data[i] = data[i] * 0.2; // Adjust vertical scale for steeper hills
+      }
+
+      return data;
+    }
+
+    function getYPosition(x, z, data, width, depth) {
+      const halfWidth = worldSize / 2;
+      const halfDepth = worldSize / 2;
+
+      const ix = Math.floor(((x + halfWidth) / worldSize) * (width - 1));
+      const iz = Math.floor(((z + halfDepth) / worldSize) * (depth - 1));
+
+      return data[ix + iz * width] || 0;
+    }
+
+    function getSlope(x, z, data, width, depth) {
+      const delta = 1;
+      const y = getYPosition(x, z, data, width, depth);
+      const yX1 = getYPosition(x + delta, z, data, width, depth);
+      const yZ1 = getYPosition(x, z + delta, data, width, depth);
+
+      const dx = y - yX1;
+      const dz = y - yZ1;
+
+      return Math.sqrt(dx * dx + dz * dz);
+    }
+
+    function createTree() {
+      const tree = new THREE.Group();
+      const trunkGeometry = new THREE.CylinderGeometry(0.2, 0.4, 4, 8);
+      const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+      trunk.position.y = 0;
+      tree.add(trunk);
+
+      const leavesGeometry = new THREE.ConeGeometry(1.5, 5, 8);
+      const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
+      leaves.position.y = 3;
+      tree.add(leaves);
+
+      const scale = 0.5 + Math.random() * 0.5;
+      tree.scale.set(scale, scale, scale);
+
+      return tree;
+    }
+
+    function createRock() {
+      const rock = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(1 + Math.random()),
+        rockMaterial
+      );
+      const scale = 0.5 + Math.random() * 0.5;
+      rock.scale.set(scale, scale, scale);
+
+      return rock;
+    }
+
+    function generateTexture(data, width, height) {
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+
+      const context = canvas.getContext("2d");
+      const image = context.getImageData(0, 0, canvas.width, canvas.height);
+      const imageData = image.data;
+
+      for (let i = 0, j = 0, l = imageData.length; i < l; i += 4, j++) {
+        const altitude = data[j];
+        let r, g, b;
+
+        if (altitude < -10) {
+          // Deep water
+          r = 0;
+          g = 0;
+          b = 80;
+        } else if (altitude < -2) {
+          // Shallow water
+          r = 70;
+          g = 130;
+          b = 180;
+        } else if (altitude < 0) {
+          // Beach
+          r = 194;
+          g = 178;
+          b = 128;
+        } else if (altitude < 15) {
+          // Grassland
+          r = 50;
+          g = 180;
+          b = 50;
+        } else if (altitude < 25) {
+          // Forest
+          r = 34;
+          g = 139;
+          b = 34;
+        } else if (altitude < 35) {
+          // Rocks
+          r = 120;
+          g = 120;
+          b = 120;
+        } else {
+          // Snow
+          r = 255;
+          g = 250;
+          b = 250;
+        }
+
+        imageData[i] = r;
+        imageData[i + 1] = g;
+        imageData[i + 2] = b;
+        imageData[i + 3] = 255;
+      }
+
+      context.putImageData(image, 0, 0);
+
+      const canvasScaled = document.createElement("canvas");
+      canvasScaled.width = width * 4;
+      canvasScaled.height = height * 4;
+
+      const contextScaled = canvasScaled.getContext("2d");
+      contextScaled.scale(4, 4);
+      contextScaled.drawImage(canvas, 0, 0);
+
+      const scaledImage = contextScaled.getImageData(
+        0,
+        0,
+        canvasScaled.width,
+        canvasScaled.height
+      );
+      const scaledImageData = scaledImage.data;
+
+      for (let i = 0, l = scaledImageData.length; i < l; i += 4) {
+        const v = Math.random() * 5;
+
+        scaledImageData[i] += v;
+        scaledImageData[i + 1] += v;
+        scaledImageData[i + 2] += v;
+      }
+
+      contextScaled.putImageData(scaledImage, 0, 0);
+
+      return canvasScaled;
+    }
+
+    // Create the water plane
+    const waterGeometry = new THREE.PlaneGeometry(worldSize, worldSize);
+    waterGeometry.rotateX(-Math.PI / 2);
+
+    const waterMaterial = new THREE.MeshPhongMaterial({
+      color: 0x1ca3ec, // Water blue color
+      transparent: true,
+      opacity: 0.6,
+      shininess: 100,
+      side: THREE.DoubleSide,
+    });
+
+    const waterMesh = new THREE.Mesh(waterGeometry, waterMaterial);
+    waterMesh.position.y = -2; // Position it at the top of the water layer
+    scene.add(waterMesh);
+
+    // Create array to hold sheep bodies
+    const sheepBodies = [];
+    const numSheep = 200; // Increased number of sheep
+    let selectedSheep = null;
+    let selectedSheepLastPosition = new CANNON.Vec3();
+    let originalCameraPosition = camera.position.clone();
+    let cameraOffset = new THREE.Vector3();
+
+    // Parameters for flocking behavior
+    const flockSettings = {
+      alignmentWeight: 1.5,
+      cohesionWeight: 1.0,
+      separationWeight: 2.0,
+      uphillWeight: 0.5,
+      neighborDistance: 50,
+      desiredSeparation: 2.0,
+      maxForce: 5,
+      maxSpeed: 5,
+    };
+
+    // Add flock settings group to dat.gui
+    const flockSettingsGroup = gui.addFolder("Flocking Settings");
+    flockSettingsGroup.add(flockSettings, "alignmentWeight", 0, 5, 0.01);
+    flockSettingsGroup.add(flockSettings, "cohesionWeight", 0, 5, 0.01);
+    flockSettingsGroup.add(flockSettings, "separationWeight", 0, 5, 0.01);
+    flockSettingsGroup.add(flockSettings, "uphillWeight", 0, 5, 0.01);
+    flockSettingsGroup.add(flockSettings, "neighborDistance", 10, 100, 1);
+    flockSettingsGroup.add(flockSettings, "desiredSeparation", 0, 10, 0.1);
+    flockSettingsGroup.add(flockSettings, "maxForce", 0, 10, 0.1);
+    flockSettingsGroup.add(flockSettings, "maxSpeed", 0, 10, 0.1);
+
+    // Create object to track key presses
+    const keys = {};
+
+    // Add event listeners for key presses
+    window.addEventListener("keydown", function (event) {
+      keys[event.code] = true;
+
+      // Stop following the sheep when Escape is pressed
+      if (event.code === "Escape" && selectedSheep) {
+        selectedSheep = null;
+        // Do not modify camera position, keep current view
+        // Controls will now orbit around the last target
+      }
+    });
+
+    window.addEventListener("keyup", function (event) {
+      keys[event.code] = false;
+    });
+
+    // Raycaster for selecting sheep
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    window.addEventListener("click", onMouseClick, false);
+
+    function onMouseClick(event) {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+
+      const intersects = raycaster.intersectObjects(
+        sheepBodies.map((s) => s.mesh),
+        true
+      );
+
+      if (intersects.length > 0) {
+        const selectedMesh = intersects[0].object.parent;
+        selectedSheep = sheepBodies.find((s) => s.mesh === selectedMesh);
+        selectedSheepLastPosition.copy(selectedSheep.body.position);
+
+        // Save the current camera position
+        originalCameraPosition.copy(camera.position);
+
+        // Zoom in on the selected sheep by setting a closer camera position
+        cameraOffset.set(10, 5, 10); // Adjust as needed for desired zoom level
+
+        // Update controls to target the selected sheep
+        controls.target.copy(selectedSheep.mesh.position);
+
+        // Move camera to the new position relative to the sheep
+        camera.position.copy(selectedSheep.mesh.position).add(cameraOffset);
+
+        // Update the controls
+        controls.update();
+      }
+    }
+
+    // Create sheep entities
+    function createSheep(x, y, z) {
+      // Create sheep mesh
+      const sheepGroup = new THREE.Group();
+
+      // Body
+      const bodyGeometry = new THREE.SphereGeometry(1, 16, 16);
+      const bodyMaterial = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+      });
+      const bodyMesh = new THREE.Mesh(bodyGeometry, bodyMaterial);
+      bodyMesh.castShadow = true;
+      bodyMesh.receiveShadow = true;
+      sheepGroup.add(bodyMesh);
+
+      // Head
+      const headGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+      const headMaterial = new THREE.MeshStandardMaterial({
+        color: 0xaaaaaa,
+      });
+      const headMesh = new THREE.Mesh(headGeometry, headMaterial);
+      headMesh.position.set(0, 0.5, 1);
+      headMesh.castShadow = true;
+      headMesh.receiveShadow = true;
+      sheepGroup.add(headMesh);
+
+      // Legs
+      const legGeometry = new THREE.CylinderGeometry(0.1, 0.1, 0.5, 8);
+      const legMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
+      for (let i = 0; i < 4; i++) {
+        const legMesh = new THREE.Mesh(legGeometry, legMaterial);
+        legMesh.position.set(
+          i < 2 ? -0.5 : 0.5,
+          -0.75,
+          i % 2 === 0 ? -0.5 : 0.5
+        );
+        legMesh.castShadow = true;
+        legMesh.receiveShadow = true;
+        sheepGroup.add(legMesh);
+      }
+
+      sheepGroup.position.set(x, y, z);
+      scene.add(sheepGroup);
+
+      // Create sheep physics body
+      const sheepShape = new CANNON.Sphere(1);
+      const sheepBody = new CANNON.Body({
+        mass: 0.5,
+        shape: sheepShape,
+        position: new CANNON.Vec3(x, y, z),
+        material: sheepMaterial,
+      });
+      sheepBody.allowSleep = false;
+      world.addBody(sheepBody);
+
+      sheepBodies.push({
+        mesh: sheepGroup,
+        body: sheepBody,
+        acceleration: new CANNON.Vec3(),
+        isFloating: false,
+      });
+    }
+
+    // Add sheep to the scene
+    for (let i = 0; i < numSheep; i++) {
+      const x = (Math.random() - 0.5) * worldSize * 0.5;
+      const z = (Math.random() - 0.5) * worldSize * 0.5;
+      const y = getYPosition(x, z, data, worldResolution, worldResolution) + 1;
+      if (y > waterMesh.position.y + 1) {
+        createSheep(x, y, z);
+      }
+    }
+
+    // Animation loop
+    function animate() {
+      requestAnimationFrame(animate);
+
+      // Step the physics world
+      world.fixedStep();
+
+      // Update sheep behavior
+      sheepBodies.forEach((sheep) => {
+        const { mesh, body, acceleration } = sheep;
+        const currentPosition = body.position;
+
+        if (sheep === selectedSheep) {
+          // When controlling the sheep, don't apply flocking or uphill forces
+          handleSheepControls(sheep);
+        } else {
+          const terrainHeight = getYPosition(
+            currentPosition.x,
+            currentPosition.z,
+            data,
+            worldResolution,
+            worldResolution
+          );
+
+          // Check if sheep is swimming
+          const isSwimming = terrainHeight <= waterMesh.position.y;
+          const isNearShore = terrainHeight <= waterMesh.position.y + 5;
+
+          if (isSwimming || isNearShore) {
+            // Sheep is swimming or near the shore
+            // Compute direction towards higher ground
+            const uphillForce = getUphillForce(currentPosition);
+            const weight = isSwimming
+              ? flockSettings.uphillWeight * 5
+              : flockSettings.uphillWeight * 2;
+            uphillForce.scale(weight, uphillForce);
+
+            // Use uphill force as acceleration
+            acceleration.copy(uphillForce);
+
+            // Limit the force
+            if (acceleration.length() > flockSettings.maxForce) {
+              acceleration.normalize();
+              acceleration.scale(flockSettings.maxForce, acceleration);
+            }
+
+            // Apply acceleration to velocity
+            body.velocity.x += acceleration.x * (1 / 60);
+            body.velocity.z += acceleration.z * (1 / 60);
+
+            // Limit speed
+            const speed = Math.sqrt(
+              body.velocity.x * body.velocity.x +
+                body.velocity.z * body.velocity.z
+            );
+            if (speed > flockSettings.maxSpeed) {
+              body.velocity.x =
+                (body.velocity.x / speed) * flockSettings.maxSpeed;
+              body.velocity.z =
+                (body.velocity.z / speed) * flockSettings.maxSpeed;
+            }
+          } else {
+            // Normal flocking behavior
+            // Flocking forces
+            const flockForce = flock(sheep, sheepBodies);
+
+            // Uphill tendency
+            const uphillForce = getUphillForce(currentPosition);
+            uphillForce.scale(flockSettings.uphillWeight, uphillForce);
+
+            // Combine forces
+            acceleration.copy(flockForce);
+            acceleration.vadd(uphillForce, acceleration);
+
+            // Limit the force
+            if (acceleration.length() > flockSettings.maxForce) {
+              acceleration.normalize();
+              acceleration.scale(flockSettings.maxForce, acceleration);
+            }
+
+            // Apply acceleration to velocity
+            body.velocity.x += acceleration.x * (1 / 60);
+            body.velocity.z += acceleration.z * (1 / 60);
+
+            // Limit speed
+            const speed = Math.sqrt(
+              body.velocity.x * body.velocity.x +
+                body.velocity.z * body.velocity.z
+            );
+            if (speed > flockSettings.maxSpeed) {
+              body.velocity.x =
+                (body.velocity.x / speed) * flockSettings.maxSpeed;
+              body.velocity.z =
+                (body.velocity.z / speed) * flockSettings.maxSpeed;
+            }
+          }
+        }
+
+        // Sheep float on water
+        const terrainHeight = getYPosition(
+          currentPosition.x,
+          currentPosition.z,
+          data,
+          worldResolution,
+          worldResolution
+        );
+        if (terrainHeight <= waterMesh.position.y) {
+          if (body.position.y < waterMesh.position.y) {
+            body.angularDamping = 0.5;
+            body.velocity.y *= 0.8;
+            body.force.y =
+              -settings.gravity *
+              body.mass *
+              (waterMesh.position.y - body.position.y + 0.5) ** 2;
+          }
+        } else {
+          body.angularDamping = 0;
+          body.force.y = 0;
+        }
+
+        // Prevent sheep from falling through terrain
+        if (currentPosition.y < terrainHeight + 0.5) {
+          body.position.y = terrainHeight + 0.5;
+          body.velocity.y = 0;
+        }
+
+        // Update mesh position
+        mesh.position.copy(body.position);
+        mesh.quaternion.copy(body.quaternion);
+      });
+
+      // Update camera
+      if (selectedSheep) {
+        // Update controls target to follow the sheep
+        controls.target.copy(selectedSheep.mesh.position);
+
+        // Move camera by the difference between the sheep's current position and its last position
+        const currentPosition = selectedSheep.body.position;
+        const lastPosition = selectedSheepLastPosition;
+        const positionDifference = currentPosition.vsub(lastPosition);
+        camera.position.add(positionDifference);
+
+        // Allow the user to orbit around the selected sheep
+        controls.update();
+
+        selectedSheepLastPosition.copy(selectedSheep.body.position);
+      } else {
+        // Controls target remains the same, user can orbit freely
+        controls.update();
+      }
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    function flock(sheep, sheepArray) {
+      const alignment = new CANNON.Vec3();
+      const cohesion = new CANNON.Vec3();
+      const separation = new CANNON.Vec3();
+      let count = 0;
+
+      sheepArray.forEach((other) => {
+        const distance = sheep.body.position.distanceTo(other.body.position);
+        if (other !== sheep && distance < flockSettings.neighborDistance) {
+          // Alignment
+          alignment.vadd(other.body.velocity, alignment);
+
+          // Cohesion
+          cohesion.vadd(other.body.position, cohesion);
+
+          // Separation
+          const diff = sheep.body.position.vsub(other.body.position);
+          diff.normalize();
+          diff.scale(1 / distance, diff); // Weight by inverse distance
+          separation.vadd(diff, separation);
+
+          count++;
+        }
+      });
+
+      if (count > 0) {
+        // Average alignment
+        alignment.scale(1 / count, alignment);
+        alignment.normalize();
+        alignment.scale(flockSettings.maxSpeed, alignment);
+        alignment.vsub(sheep.body.velocity, alignment);
+        alignment.scale(flockSettings.alignmentWeight, alignment);
+
+        // Average cohesion
+        cohesion.scale(1 / count, cohesion);
+        cohesion.vsub(sheep.body.position, cohesion);
+        cohesion.normalize();
+        cohesion.scale(flockSettings.maxSpeed, cohesion);
+        cohesion.vsub(sheep.body.velocity, cohesion);
+        cohesion.scale(flockSettings.cohesionWeight, cohesion);
+
+        // Average separation
+        separation.scale(1 / count, separation);
+        separation.normalize();
+        separation.scale(flockSettings.maxSpeed, separation);
+        separation.vsub(sheep.body.velocity, separation);
+        separation.scale(flockSettings.separationWeight, separation);
+      }
+
+      const totalForce = new CANNON.Vec3();
+      totalForce.vadd(alignment, totalForce);
+      totalForce.vadd(cohesion, totalForce);
+      totalForce.vadd(separation, totalForce);
+
+      return totalForce;
+    }
+
+    function getUphillForce(position) {
+      const delta = 1;
+      const currentHeight = getYPosition(
+        position.x,
+        position.z,
+        data,
+        worldResolution,
+        worldResolution
+      );
+      const heightXPlus = getYPosition(
+        position.x + delta,
+        position.z,
+        data,
+        worldResolution,
+        worldResolution
+      );
+      const heightXMinus = getYPosition(
+        position.x - delta,
+        position.z,
+        data,
+        worldResolution,
+        worldResolution
+      );
+      const heightZPlus = getYPosition(
+        position.x,
+        position.z + delta,
+        data,
+        worldResolution,
+        worldResolution
+      );
+      const heightZMinus = getYPosition(
+        position.x,
+        position.z - delta,
+        data,
+        worldResolution,
+        worldResolution
+      );
+
+      const gradientX = heightXPlus - heightXMinus;
+      const gradientZ = heightZPlus - heightZMinus;
+
+      const uphillDirection = new CANNON.Vec3(gradientX, 0, gradientZ);
+      uphillDirection.normalize();
+
+      return uphillDirection;
+    }
+
+    // Handle window resizing
+    window.addEventListener("resize", onWindowResize, false);
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function handleSheepControls(sheep) {
+      const { body } = sheep;
+
+      // Calculate direction vectors relative to camera orientation
+      const forwardVector = new THREE.Vector3();
+      camera.getWorldDirection(forwardVector);
+      forwardVector.y = 0;
+      forwardVector.normalize();
+
+      const rightVector = new THREE.Vector3();
+      rightVector.crossVectors(forwardVector, new THREE.Vector3(0, 1, 0));
+      rightVector.normalize();
+
+      const acceleration = new THREE.Vector3();
+
+      if (keys["KeyW"]) {
+        // Move forward
+        acceleration.add(forwardVector);
+      }
+      if (keys["KeyS"]) {
+        // Move backward
+        acceleration.sub(forwardVector);
+      }
+      if (keys["KeyA"]) {
+        // Move left
+        acceleration.sub(rightVector);
+      }
+      if (keys["KeyD"]) {
+        // Move right
+        acceleration.add(rightVector);
+      }
+
+      // Normalize acceleration vector
+      if (acceleration.lengthSq() > 0) {
+        acceleration.normalize();
+        acceleration.multiplyScalar(flockSettings.maxForce);
+
+        // Apply acceleration to velocity
+        body.velocity.x += acceleration.x * (1 / 60);
+        body.velocity.z += acceleration.z * (1 / 60);
+
+        // Limit speed
+        const speed = Math.sqrt(
+          body.velocity.x * body.velocity.x +
+            body.velocity.z * body.velocity.z
+        );
+        if (speed > flockSettings.maxSpeed) {
+          body.velocity.x =
+            (body.velocity.x / speed) * flockSettings.maxSpeed;
+          body.velocity.z =
+            (body.velocity.z / speed) * flockSettings.maxSpeed;
+        }
+      }
+
+      // Jump when Space is pressed
+      if (keys["Space"]) {
+        // Raycast down from the sheep body to check if it's on the ground
+        const rayOrigin = new THREE.Vector3(
+          body.position.x,
+          body.position.y,
+          body.position.z
+        );
+        const rayDirection = new THREE.Vector3(0, -1, 0);
+        const rayLength = 1.1;
+
+        const rayCaster = new THREE.Raycaster(
+          rayOrigin,
+          rayDirection,
+          0,
+          rayLength
+        );
+        const intersects = rayCaster.intersectObject(mesh);
+
+        if (intersects.length > 0) {
+          body.velocity.y = 10;
+        }
+      }
+    }
+  </script>
+</body>
+
+</html>
