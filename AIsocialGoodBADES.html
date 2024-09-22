@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Pioneer Program Challenges</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+        body {
+            background-color: #000;
+            color: #0f0;
+            font-family: 'Orbitron', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 40px;
+            text-shadow: 0 0 10px #0f0, 0 0 20px #0f0, 0 0 30px #0f0;
+            animation: pulse 2s infinite;
+        }
+        .challenges-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        .challenge {
+            background-color: rgba(0, 255, 0, 0.1);
+            border: 2px solid #0f0;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .challenge:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(0, 255, 0, 0.3);
+        }
+        .challenge i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        .challenge:hover i {
+            transform: scale(1.2) rotate(360deg);
+        }
+        .challenge h2 {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        .challenge p {
+            font-size: 16px;
+            opacity: 0;
+            max-height: 0;
+            transition: all 0.5s ease;
+        }
+        .challenge.active p {
+            opacity: 1;
+            max-height: 300px;
+            margin-top: 15px;
+        }
+        .challenge::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 3px;
+            background-color: #0f0;
+            transition: all 0.3s ease;
+        }
+        .challenge:hover::after {
+            width: 100%;
+            left: 0;
+        }
+        @keyframes pulse {
+            0% { text-shadow: 0 0 10px #0f0, 0 0 20px #0f0, 0 0 30px #0f0; }
+            50% { text-shadow: 0 0 20px #0f0, 0 0 30px #0f0, 0 0 40px #0f0; }
+            100% { text-shadow: 0 0 10px #0f0, 0 0 20px #0f0, 0 0 30px #0f0; }
+        }
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+    <div id="particles-js"></div>
+    <div class="container">
+        <h1>AI Pioneer Program Challenges</h1>
+        <div class="challenges-grid">
+            <div class="challenge" onclick="toggleChallenge(this)">
+                <i class="fas fa-bolt"></i>
+                <h2>Energy Saver</h2>
+                <p>Create an AI that makes homes and schools super energy-efficient! Automatically adjust lights, heating, and cooling to save power. Help the planet and cut down on energy bills!</p>
+            </div>
+            <div class="challenge" onclick="toggleChallenge(this)">
+                <i class="fas fa-recycle"></i>
+                <h2>Waste Reducer</h2>
+                <p>Design an AI that sorts trash faster than any human, perfectly separating recyclables and compostables. Suggest ways to reuse items and reduce landfill waste!</p>
+            </div>
+            <div class="challenge" onclick="toggleChallenge(this)">
+                <i class="fas fa-paw"></i>
+                <h2>Animal Defender</h2>
+                <p>Develop an AI system that protects endangered animals from poachers using drones and smart cameras. Track animal movements and alert rangers when animals are in danger!</p>
+            </div>
+            <div class="challenge" onclick="toggleChallenge(this)">
+                <i class="fas fa-city"></i>
+                <h2>City Cleaner</h2>
+                <p>Create an AI that makes cities cleaner and healthier. Control traffic lights to reduce air pollution, guide cleaning robots, and predict litter accumulation!</p>
+            </div>
+            <div class="challenge" onclick="toggleChallenge(this)">
+                <i class="fas fa-rocket"></i>
+                <h2>SpaceX Explorer</h2>
+                <p>Design an AI that helps humans explore and settle on other planets. Control life support systems on Mars, mine asteroids, and navigate spaceships through dangerous areas!</p>
+            </div>
+            <div class="challenge" onclick="toggleChallenge(this)">
+                <i class="fas fa-water"></i>
+                <h2>Ocean Guardian</h2>
+                <p>Develop an AI that protects our oceans. Guide cleanup drones to collect plastic, monitor coral reef health, and help fishing boats avoid overfishing!</p>
+            </div>
+            <div class="challenge" onclick="toggleChallenge(this)">
+                <i class="fas fa-cloud-sun"></i>
+                <h2>Climate Harmonizer</h2>
+                <p>Create an AI that helps balance our planet's climate. Predict extreme weather events, suggest the best places to plant trees, and control CO2 removal systems!</p>
+            </div>
+            <div class="challenge" onclick="toggleChallenge(this)">
+                <i class="fas fa-lightbulb"></i>
+                <h2>Eco Innovator</h2>
+                <p>Design an AI that invents new eco-friendly materials and processes. Create biodegradable plastics, more efficient solar panels, and new ways to clean up pollution!</p>
+            </div>
+            <div class="challenge" onclick="toggleChallenge(this)">
+                <i class="fas fa-dna"></i>
+                <h2>Bio Synergist</h2>
+                <p>Develop an AI that helps humans work in harmony with nature. Design eco-friendly buildings, create symbiotic relationships between cities and ecosystems, and bridge the gap between humanity and nature!</p>
+            </div>
+            <div class="challenge" onclick="toggleChallenge(this)">
+                <i class="fas fa-magic"></i>
+                <h2>Resource Alchemist</h2>
+                <p>Create an AI that turns waste into valuable resources. Transform pollution into useful materials, convert CO2 into fuel, and find ways to reuse every product we create!</p>
+            </div>
+            <div class="challenge" onclick="toggleChallenge(this)">
+                <i class="fas fa-paint-brush"></i>
+                <h2>Iconic Designer</h2>
+                <p>Develop an AI that revolutionizes design and creativity. Create stunning visuals, invent new art styles, and design futuristic, sustainable products that change the way we live!</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+        function toggleChallenge(element) {
+            element.classList.toggle('active');
+        }
+
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 80, density: { enable: true, value_area: 800 } },
+                color: { value: '#0f0' },
+                shape: { type: 'circle' },
+                opacity: { value: 0.5, random: false },
+                size: { value: 3, random: true },
+                line_linked: { enable: true, distance: 150, color: '#0f0', opacity: 0.4, width: 1 },
+                move: { enable: true, speed: 6, direction: 'none', random: false, straight: false, out_mode: 'out', bounce: false }
+            },
+            interactivity: {
+                detect_on: 'canvas',
+                events: { onhover: { enable: true, mode: 'repulse' }, onclick: { enable: true, mode: 'push' }, resize: true },
+                modes: { repulse: { distance: 100, duration: 0.4 }, push: { particles_nb: 4 } }
+            },
+            retina_detect: true
+        });
+
+        gsap.from('.challenge', {
+            duration: 1,
+            opacity: 0,
+            y: 50,
+            stagger: 0.2,
+            ease: 'power3.out'
+        });
+    </script>
+</body>
+</html>
