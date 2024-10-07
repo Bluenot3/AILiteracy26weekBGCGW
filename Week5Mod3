@@ -1,0 +1,223 @@
+<html>
+<head>
+    <title>ZEN AI Learning Environment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* General styles for the body of the page */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #eef2f7;
+            color: #333;
+        }
+        /* Styling the header section */
+        header {
+            background-color: #4A90E2;
+            color: white;
+            padding: 1.5em;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        /* Main section layout for the editor and preview */
+        main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            flex-direction: column;
+            padding: 1em;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        /* Container for the editor and preview */
+        #editor-container, #preview-container {
+            width: 100%;
+            padding: 1em;
+            box-sizing: border-box;
+        }
+        /* Editor styling */
+        #editor {
+            background-color: #f8f9fc;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            overflow: auto;
+            height: 40vh;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        /* Preview styling */
+        #preview {
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            overflow: auto;
+            height: 40vh;
+            margin-top: 1em;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        /* Styling for the textarea used as the code editor */
+        textarea {
+            width: 100%;
+            height: 100%;
+            resize: none;
+            box-sizing: border-box;
+            font-family: monospace;
+            font-size: 1em;
+            border: none;
+            outline: none;
+            background-color: #f9f9f9;
+            padding: 0.5em;
+            border-radius: 8px;
+        }
+        /* Styling for the help box containing tips and buttons */
+        .help-box {
+            background-color: #e0f3ff;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            color: #333;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        /* Styling for buttons */
+        button {
+            background-color: #4A90E2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s, transform 0.2s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        button:hover {
+            background-color: #357ABD;
+            transform: scale(1.05);
+        }
+        /* Footer styling */
+        footer {
+            background-color: #4A90E2;
+            color: white;
+            text-align: center;
+            padding: 1em;
+            box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: auto;
+        }
+        .footer-text {
+            font-size: 0.9em;
+        }
+        /* Responsive styling for mobile devices */
+        @media (max-width: 768px) {
+            #editor, #preview {
+                height: 30vh;
+            }
+            button {
+                padding: 10px 20px;
+                font-size: 0.9em;
+            }
+            .help-box {
+                font-size: 0.8em;
+            }
+        }
+    </style>
+    <script>
+        // Function to update the preview pane with the current content of the code editor
+        function updatePreview() {
+            var code = document.getElementById('code').value;
+            var previewFrame = document.getElementById('previewFrame').contentWindow.document;
+            previewFrame.open(); // Clear the current content
+            previewFrame.write(code); // Write new HTML code into the iframe
+            previewFrame.close(); // Close the document to render it
+        }
+        
+        // Function to add an AI widget iframe to the code editor
+        function addAICode() {
+            var codeEditor = document.getElementById('code');
+            var aiCode = '<iframe src="https://example-ai-tool.com/widget" width="100%" height="400" style="border: 1px solid #ccc; border-radius: 10px;"></iframe>';
+            codeEditor.value += '\n' + aiCode; // Append AI widget code to the editor
+            updatePreview(); // Update the preview to reflect changes
+        }
+        
+        // Function to add an image element to the code editor
+        function addImage() {
+            var codeEditor = document.getElementById('code');
+            var imageCode = '<img src="https://via.placeholder.com/400" alt="Sample Image" style="max-width: 100%; border-radius: 10px;" />';
+            codeEditor.value += '\n' + imageCode; // Append image code to the editor
+            updatePreview(); // Update the preview to reflect changes
+        }
+        
+        // Function to add a button element to the code editor
+        function addButton() {
+            var codeEditor = document.getElementById('code');
+            var buttonCode = '<button style="padding: 10px 20px; background-color: #4A90E2; color: white; border: none; border-radius: 5px; cursor: pointer;">Click Me!</button>';
+            codeEditor.value += '\n' + buttonCode; // Append button code to the editor
+            updatePreview(); // Update the preview to reflect changes
+        }
+        
+        // Function that runs when the page is loaded to initialize the editor and preview
+        window.onload = function() {
+            var codeEditor = document.getElementById('code');
+            codeEditor.addEventListener('input', updatePreview); // Update preview when user types in the editor
+            updatePreview(); // Initial update to populate preview
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <h1>ZEN AI Learning Environment</h1>
+    </header>
+    <main>
+        <div id="editor-container">
+            <div class="help-box">
+                <p><strong>Tip for Students:</strong> You can add AI tools by clicking the "Add AI Widget" button below. Try experimenting with different HTML elements to see how they look in the preview.</p>
+                <!-- Buttons to add AI widget, image, and button elements to the editor -->
+                <button onclick="addAICode()"><i class="fas fa-robot"></i> Add AI Widget</button>
+                <button onclick="addImage()"><i class="fas fa-image"></i> Add Image</button>
+                <button onclick="addButton()"><i class="fas fa-mouse-pointer"></i> Add Button</button>
+            </div>
+            <!-- Adding an external image link to the editor interface with updated image -->
+            <a href="https://imgur.com/xfMdqOW"><img src="https://i.imgur.com/xfMdqOWm.png" title="source: imgur.com" style="max-width: 100%; margin-bottom: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);" /></a>
+            <div id="editor">
+                <textarea id="code">
+<html>
+<head>
+    <title>Welcome to ZEN AI</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #eef2f7; padding: 20px; }
+        h1 { color: #4A90E2; }
+        .content-box { max-width: 800px; margin: 0 auto; padding: 20px; background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+    </style>
+</head>
+<body>
+    <h1>Hello, ZEN AI Students!</h1>
+    <div class="content-box">
+        <p>Edit the code in the editor to see the preview here. You can add your own HTML, CSS, and JavaScript!</p>
+        <!-- You can embed AI in an iframe like this: -->
+        <!--
+        <iframe src="https://example-ai-tool.com/widget" width="100%" height="400"></iframe>
+        -->
+    </div>
+</body>
+</html>
+                </textarea>
+            </div>
+        </div>
+        <div id="preview-container">
+            <div id="preview">
+                <iframe id="previewFrame" style="width:100%; height:100%; border:0;"></iframe>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <p class="footer-text">Powered by ZEN AI Learning Environment | Learn, Create, Innovate</p>
+    </footer>
+</body>
+</html>
