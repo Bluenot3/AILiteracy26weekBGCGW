@@ -1,0 +1,564 @@
+<html><head><base href="https://digital-sculpture.art/quantum-fluid-dynamics">
+<title>Quantum Fluid Dynamics Simulator - Interaction Event</title>
+<style>
+  body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #000;
+    color: #0f0;
+    font-family: 'Courier New', monospace;
+  }
+  #canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  #info {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px;
+    border-radius: 5px;
+    max-width: 300px;
+  }
+  #controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px;
+    border-radius: 5px;
+    max-height: 80vh;
+    overflow-y: auto;
+    width: 250px;
+  }
+  #event-log {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px;
+    border-radius: 5px;
+    max-width: 500px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .event {
+    margin-bottom: 5px;
+    padding: 5px;
+    border-radius: 3px;
+    background: rgba(0, 255, 0, 0.1);
+  }
+  input[type="range"] {
+    width: 100%;
+  }
+  label, input, select {
+    display: block;
+    margin-bottom: 5px;
+  }
+  a {
+    color: #0f0;
+    text-decoration: none;
+  }
+  a:hover {
+    text-decoration: underline;
+  }
+  .glitch {
+    position: relative;
+  }
+  .glitch::before,
+  .glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .glitch::before {
+    left: 2px;
+    text-shadow: -2px 0 #ff00c1;
+    clip: rect(24px, 550px, 90px, 0);
+    animation: glitch-anim-2 3s infinite linear alternate-reverse;
+  }
+  .glitch::after {
+    left: -2px;
+    text-shadow: -2px 0 #00fff9, 2px 2px #ff00c1;
+    animation: glitch-anim 2.5s infinite linear alternate-reverse;
+  }
+  @keyframes glitch-anim {
+    0% {
+      clip: rect(5px, 9999px, 75px, 0);
+    }
+    25% {
+      clip: rect(65px, 9999px, 99px, 0);
+    }
+    50% {
+      clip: rect(15px, 9999px, 45px, 0);
+    }
+    75% {
+      clip: rect(85px, 9999px, 25px, 0);
+    }
+    100% {
+      clip: rect(35px, 9999px, 95px, 0);
+    }
+  }
+  @keyframes glitch-anim-2 {
+    0% {
+      clip: rect(15px, 9999px, 65px, 0);
+    }
+    25% {
+      clip: rect(55px, 9999px, 89px, 0);
+    }
+    50% {
+      clip: rect(25px, 9999px, 35px, 0);
+    }
+    75% {
+      clip: rect(75px, 9999px, 15px, 0);
+    }
+    100% {
+      clip: rect(45px, 9999px, 85px, 0);
+    }
+  }
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="info">
+  <h2 class="glitch" data-text="Quantum Entanglement Intensified">Quantum Entanglement Intensified</h2>
+  <p>Your interaction has triggered a cascade of quantum events! The fabric of spacetime is fluctuating rapidly.</p>
+  <p>Current Quantum State: <span id="currentState">Entangled</span></p>
+  <p>Particle Interactions: <span id="interactions">1</span></p>
+  <p>Quantum Coherence: <span id="coherence">87%</span></p>
+</div>
+<div id="controls">
+  <label for="quantumState">Quantum State:</label>
+  <select id="quantumState">
+    <option value="superposition">Superposition</option>
+    <option value="entangled" selected>Entangled</option>
+    <option value="collapsed">Collapsed</option>
+  </select>
+  
+  <label for="planckScale">Planck Scale:</label>
+  <input type="range" id="planckScale" min="0" max="1" step="0.01" value="0.7">
+  
+  <label for="uncertaintyPrinciple">Uncertainty Principle:</label>
+  <input type="range" id="uncertaintyPrinciple" min="0" max="1" step="0.01" value="0.5">
+  
+  <label for="waveFunctionCollapse">Wave Function Collapse Rate:</label>
+  <input type="range" id="waveFunctionCollapse" min="0" max="1" step="0.01" value="0.3">
+  
+  <label for="quantumTunneling">Quantum Tunneling Probability:</label>
+  <input type="range" id="quantumTunneling" min="0" max="1" step="0.01" value="0.15">
+  
+  <label for="particleType">Particle Type:</label>
+  <select id="particleType">
+    <option value="photon">Photon</option>
+    <option value="electron" selected>Electron</option>
+    <option value="quark">Quark</option>
+  </select>
+  
+  <label for="spinState">Spin State:</label>
+  <select id="spinState">
+    <option value="up">Up</option>
+    <option value="down">Down</option>
+    <option value="superposition" selected>Superposition</option>
+  </select>
+  
+  <label for="observerEffect">Observer Effect Intensity:</label>
+  <input type="range" id="observerEffect" min="0" max="1" step="0.01" value="0.4">
+  
+  <label for="quantumFoam">Quantum Foam Density:</label>
+  <input type="range" id="quantumFoam" min="0" max="1" step="0.01" value="0.8">
+  
+  <label for="multiverseInteraction">Multiverse Interaction:</label>
+  <input type="checkbox" id="multiverseInteraction" checked>
+</div>
+<div id="event-log">
+  <div class="event">Quantum entanglement detected at coordinates (0.37, 0.62)</div>
+  <div class="event">Wave function collapsed in nearby parallel universe</div>
+  <div class="event">Sudden increase in quantum foam density observed</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+let scene, camera, renderer, fluidMesh;
+let quantumState = 'entangled';
+let planckScale = 0.7;
+let uncertaintyPrinciple = 0.5;
+let waveFunctionCollapse = 0.3;
+let quantumTunneling = 0.15;
+let particleType = 'electron';
+let spinState = 'superposition';
+let observerEffect = 0.4;
+let quantumFoam = 0.8;
+let multiverseInteraction = true;
+let interactionCount = 1;
+let coherence = 87;
+
+function init() {
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.set(0, 5, 10);
+  camera.lookAt(0, 0, 0);
+
+  renderer = new THREE.WebGLRenderer({canvas: document.getElementById('canvas'), antialias: true});
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(window.devicePixelRatio);
+
+  scene.add(new THREE.AmbientLight(0x404040));
+
+  const light = new THREE.DirectionalLight(0xffffff, 1);
+  light.position.set(1, 1, 1);
+  scene.add(light);
+
+  createQuantumFluid();
+
+  window.addEventListener('resize', onWindowResize, false);
+  document.getElementById('quantumState').addEventListener('change', updateQuantumState);
+  document.getElementById('planckScale').addEventListener('input', updatePlanckScale);
+  document.getElementById('uncertaintyPrinciple').addEventListener('input', updateUncertaintyPrinciple);
+  document.getElementById('waveFunctionCollapse').addEventListener('input', updateWaveFunctionCollapse);
+  document.getElementById('quantumTunneling').addEventListener('input', updateQuantumTunneling);
+  document.getElementById('particleType').addEventListener('change', updateParticleType);
+  document.getElementById('spinState').addEventListener('change', updateSpinState);
+  document.getElementById('observerEffect').addEventListener('input', updateObserverEffect);
+  document.getElementById('quantumFoam').addEventListener('input', updateQuantumFoam);
+  document.getElementById('multiverseInteraction').addEventListener('change', updateMultiverseInteraction);
+
+  document.getElementById('canvas').addEventListener('mousedown', onMouseDown);
+  document.getElementById('canvas').addEventListener('mousemove', onMouseMove);
+  document.getElementById('canvas').addEventListener('mouseup', onMouseUp);
+  document.getElementById('canvas').addEventListener('touchstart', onTouchStart);
+  document.getElementById('canvas').addEventListener('touchmove', onTouchMove);
+  document.getElementById('canvas').addEventListener('touchend', onTouchEnd);
+
+  animate();
+}
+
+function createQuantumFluid() {
+  const geometry = new THREE.PlaneGeometry(20, 20, 200, 200);
+  const material = new THREE.ShaderMaterial({
+    uniforms: {
+      time: { value: 0 },
+      quantumState: { value: 1 }, // 0: superposition, 1: entangled, 2: collapsed
+      planckScale: { value: planckScale },
+      uncertaintyPrinciple: { value: uncertaintyPrinciple },
+      waveFunctionCollapse: { value: waveFunctionCollapse },
+      quantumTunneling: { value: quantumTunneling },
+      particleType: { value: 1 }, // 0: photon, 1: electron, 2: quark
+      spinState: { value: 2 }, // 0: up, 1: down, 2: superposition
+      observerEffect: { value: observerEffect },
+      quantumFoam: { value: quantumFoam },
+      multiverseInteraction: { value: multiverseInteraction ? 1 : 0 },
+      interactionPoint: { value: new THREE.Vector2(0.37, 0.62) },
+      coherence: { value: coherence / 100 },
+    },
+    vertexShader: `
+      uniform float time;
+      uniform float planckScale;
+      uniform float uncertaintyPrinciple;
+      uniform float quantumFoam;
+      uniform vec2 interactionPoint;
+      uniform float coherence;
+      varying vec3 vPosition;
+      varying vec2 vUv;
+      
+      float random(vec2 st) {
+        return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
+      }
+      
+      float noise(vec2 st) {
+        vec2 i = floor(st);
+        vec2 f = fract(st);
+        float a = random(i);
+        float b = random(i + vec2(1.0, 0.0));
+        float c = random(i + vec2(0.0, 1.0));
+        float d = random(i + vec2(1.0, 1.0));
+        vec2 u = f * f * (3.0 - 2.0 * f);
+        return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+      }
+      
+      void main() {
+        vUv = uv;
+        vec3 pos = position;
+        float n = noise(pos.xy * 0.1 + time * 0.1) * planckScale;
+        n += noise(pos.xy * 0.2 - time * 0.15) * planckScale * 0.5;
+        n += noise(pos.xy * 0.4 + time * 0.2) * planckScale * 0.25;
+        
+        pos.z += n;
+        pos.z += sin(pos.x * 10.0 + time) * cos(pos.y * 10.0 + time) * uncertaintyPrinciple;
+        
+        float foam = noise(pos.xy * 10.0 + time * 0.5) * quantumFoam;
+        pos.z += foam * 0.1;
+        
+        // Interaction effect
+        float dist = distance(pos.xy, interactionPoint);
+        float interactionEffect = exp(-dist * 2.0) * sin(dist * 10.0 - time * 5.0) * 0.5;
+        pos.z += interactionEffect;
+        
+        // Coherence effect
+        pos.z += sin(pos.x * 20.0 + pos.y * 20.0 + time * 2.0) * coherence * 0.1;
+        
+        vPosition = pos;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform float time;
+      uniform int quantumState;
+      uniform float waveFunctionCollapse;
+      uniform float quantumTunneling;
+      uniform int particleType;
+      uniform int spinState;
+      uniform float observerEffect;
+      uniform float multiverseInteraction;
+      uniform vec2 interactionPoint;
+      uniform float coherence;
+      varying vec3 vPosition;
+      varying vec2 vUv;
+      
+      vec3 hsv2rgb(vec3 c) {
+        vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+        vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+        return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+      }
+      
+      float random(vec2 st) {
+        return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
+      }
+      
+      void main() {
+        vec2 st = vUv;
+        float r = length(st - 0.5);
+        float angle = atan(st.y - 0.5, st.x - 0.5);
+        
+        float hue = (angle / (2.0 * 3.14159) + 0.5 + time * 0.1);
+        float sat = r;
+        float val = 1.0;
+        
+        if (quantumState == 1) { // entangled
+          hue = fract(hue * 2.0);
+          sat = sin(r * 10.0 + time) * 0.5 + 0.5;
+        } else if (quantumState == 2) { // collapsed
+          hue = step(0.5, random(floor(st * 10.0 + time)));
+          sat = 0.8;
+          val = step(waveFunctionCollapse, random(st));
+        }
+        
+        if (particleType == 1) { // electron
+          hue = fract(hue + 0.33);
+        } else if (particleType == 2) { // quark
+          hue = fract(hue + 0.66);
+        }
+        
+        if (spinState == 1) { // down
+          sat = 1.0 - sat;
+        } else if (spinState == 2) { // superposition
+          sat = sin(sat * 10.0 + time) * 0.5 + 0.5;
+        }
+        
+        vec3 color = hsv2rgb(vec3(hue, sat, val));
+        
+        // Quantum tunneling effect
+        if (random(st + time) < quantumTunneling) {
+          color = 1.0 - color;
+        }
+        
+        // Observer effect
+        color = mix(color, vec3(1.0), length(st - 0.5) * observerEffect);
+        
+        // Multiverse interaction
+        if (multiverseInteraction > 0.5) {
+          vec3 altColor = hsv2rgb(vec3(fract(hue + 0.5), 1.0 - sat, 1.0 - val));
+          color = mix(color, altColor, sin(time + length(st)) * 0.5 + 0.5);
+        }
+        
+        // Interaction point effect
+        float dist = distance(st, interactionPoint);
+        float interactionEffect = exp(-dist * 20.0) * 0.5;
+        color += vec3(1.0, 1.0, 1.0) * interactionEffect;
+        
+        // Coherence effect
+        color += vec3(0.0, 1.0, 1.0) * (sin(st.x * 40.0 + st.y * 40.0 + time * 4.0) * 0.5 + 0.5) * coherence * 0.2;
+        
+        gl_FragColor = vec4(color, 1.0);
+      }
+    `,
+    transparent: true,
+    side: THREE.DoubleSide
+  });
+
+  fluidMesh = new THREE.Mesh(geometry, material);
+  fluidMesh.rotation.x = -Math.PI / 2;
+  scene.add(fluidMesh);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  const time = performance.now() * 0.001;
+  fluidMesh.material.uniforms.time.value = time;
+
+  // Simulate quantum fluctuations
+  coherence += (Math.random() - 0.5) * 2;
+  coherence = Math.max(0, Math.min(100, coherence));
+  document.getElementById('coherence').textContent = Math.round(coherence) + '%';
+  fluidMesh.material.uniforms.coherence.value = coherence / 100;
+
+  renderer.render(scene, camera);
+}
+
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function updateQuantumState() {
+  quantumState = document.getElementById('quantumState').value;
+  fluidMesh.material.uniforms.quantumState.value = ['superposition', 'entangled', 'collapsed'].indexOf(quantumState);
+  document.getElementById('currentState').textContent = quantumState.charAt(0).toUpperCase() + quantumState.slice(1);
+  logEvent(`Quantum state changed to ${quantumState}`);
+}
+
+function updatePlanckScale() {
+  planckScale = parseFloat(document.getElementById('planckScale').value);
+  fluidMesh.material.uniforms.planckScale.value = planckScale;
+  logEvent(`Planck scale adjusted to ${planckScale.toFixed(2)}`);
+}
+
+function updateUncertaintyPrinciple() {
+  uncertaintyPrinciple = parseFloat(document.getElementById('uncertaintyPrinciple').value);
+  fluidMesh.material.uniforms.uncertaintyPrinciple.value = uncertaintyPrinciple;
+  logEvent(`Uncertainty principle set to ${uncertaintyPrinciple.toFixed(2)}`);
+}
+
+function updateWaveFunctionCollapse() {
+  waveFunctionCollapse = parseFloat(document.getElementById('waveFunctionCollapse').value);
+  fluidMesh.material.uniforms.waveFunctionCollapse.value = waveFunctionCollapse;
+  logEvent(`Wave function collapse rate: ${waveFunctionCollapse.toFixed(2)}`);
+}
+
+function updateQuantumTunneling() {
+  quantumTunneling = parseFloat(document.getElementById('quantumTunneling').value);
+  fluidMesh.material.uniforms.quantumTunneling.value = quantumTunneling;
+  logEvent(`Quantum tunneling probability: ${quantumTunneling.toFixed(2)}`);
+}
+
+function updateParticleType() {
+  particleType = document.getElementById('particleType').value;
+  fluidMesh.material.uniforms.particleType.value = ['photon', 'electron', 'quark'].indexOf(particleType);
+  logEvent(`Particle type changed to ${particleType}`);
+}
+
+function updateSpinState() {
+  spinState = document.getElementById('spinState').value;
+  fluidMesh.material.uniforms.spinState.value = ['up', 'down', 'superposition'].indexOf(spinState);
+  logEvent(`Spin state set to ${spinState}`);
+}
+
+function updateObserverEffect() {
+  observerEffect = parseFloat(document.getElementById('observerEffect').value);
+  fluidMesh.material.uniforms.observerEffect.value = observerEffect;
+  logEvent(`Observer effect intensity: ${observerEffect.toFixed(2)}`);
+}
+
+function updateQuantumFoam() {
+  quantumFoam = parseFloat(document.getElementById('quantumFoam').value);
+  fluidMesh.material.uniforms.quantumFoam.value = quantumFoam;
+  logEvent(`Quantum foam density: ${quantumFoam.toFixed(2)}`);
+}
+
+function updateMultiverseInteraction() {
+  multiverseInteraction = document.getElementById('multiverseInteraction').checked;
+  fluidMesh.material.uniforms.multiverseInteraction.value = multiverseInteraction ? 1 : 0;
+  logEvent(`Multiverse interaction ${multiverseInteraction ? 'enabled' : 'disabled'}`);
+}
+
+let isMouseDown = false;
+
+function onMouseDown(event) {
+  isMouseDown = true;
+  interactWithQuantumFluid(event);
+}
+
+function onMouseMove(event) {
+  if (isMouseDown) {
+    interactWithQuantumFluid(event);
+  }
+}
+
+function onMouseUp() {
+  isMouseDown = false;
+}
+
+function onTouchStart(event) {
+  interactWithQuantumFluid(event.touches[0]);
+}
+
+function onTouchMove(event) {
+  interactWithQuantumFluid(event.touches[0]);
+}
+
+function onTouchEnd() {
+  // Touch ended
+}
+
+function interactWithQuantumFluid(event) {
+  const rect = renderer.domElement.getBoundingClientRect();
+  const x = ((event.clientX - rect.left) / rect.width);
+  const y = 1 - ((event.clientY - rect.top) / rect.height);
+  
+  fluidMesh.material.uniforms.interactionPoint.value.set(x, y);
+  
+  interactionCount++;
+  document.getElementById('interactions').textContent = interactionCount;
+  
+  // Quantum effects based on interaction
+  if (Math.random() < 0.1) { // 10% chance of quantum state change
+    const states = ['superposition', 'entangled', 'collapsed'];
+    const newState = states[Math.floor(Math.random() * states.length)];
+    document.getElementById('quantumState').value = newState;
+    updateQuantumState();
+  }
+  
+  if (Math.random() < 0.05) { // 5% chance of particle type change
+    const particles = ['photon', 'electron', 'quark'];
+    const newParticle = particles[Math.floor(Math.random() * particles.length)];
+    document.getElementById('particleType').value = newParticle;
+    updateParticleType();
+  }
+  
+  // Increase quantum foam temporarily
+  const currentFoam = parseFloat(document.getElementById('quantumFoam').value);
+  document.getElementById('quantumFoam').value = Math.min(currentFoam + 0.1, 1);
+  updateQuantumFoam();
+  setTimeout(() => {
+    document.getElementById('quantumFoam').value = currentFoam;
+    updateQuantumFoam();
+  }, 1000);
+  
+  logEvent(`Quantum interaction at (${x.toFixed(2)}, ${y.toFixed(2)})`);
+}
+
+function logEvent(message) {
+  const eventLog = document.getElementById('event-log');
+  const event = document.createElement('div');
+  event.className = 'event';
+  event.textContent = message;
+  eventLog.insertBefore(event, eventLog.firstChild);
+  if (eventLog.children.length > 10) {
+    eventLog.removeChild(eventLog.lastChild);
+  }
+}
+
+init();
+</script>
+</body></html>
