@@ -1,0 +1,193 @@
+<html><head><base href="https://websim.creativityunleashed.com/interactive-button/">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Animated Alphanumeric Code Button</title>
+<style>
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #1a1a2e;
+    font-family: 'Arial', sans-serif;
+  }
+  
+  .button-container {
+    position: relative;
+    width: 200px;
+    height: 60px;
+  }
+  
+  .animated-button {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: #16213e;
+    color: #e94560;
+    border: none;
+    border-radius: 30px;
+    font-size: 18px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .animated-button::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg 90deg,
+      #e94560 90deg 180deg,
+      transparent 180deg 270deg,
+      #0f3460 270deg 360deg
+    );
+    animation: rotate 4s linear infinite;
+  }
+  
+  .animated-button::after {
+    content: 'Click me!';
+    position: absolute;
+    inset: 3px;
+    background-color: #16213e;
+    border-radius: 27px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #e94560;
+    font-weight: bold;
+    z-index: 1;
+    transition: all 0.3s ease;
+  }
+  
+  .animated-button:hover::after {
+    background-color: #0f3460;
+    color: #fff;
+  }
+  
+  @keyframes rotate {
+    100% {
+      transform: rotate(1turn);
+    }
+  }
+  
+  .code-display {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(26, 26, 46, 0.9);
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+  }
+  
+  .code-container {
+    background-color: #16213e;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 0 20px rgba(233, 69, 96, 0.5);
+    text-align: center;
+    max-width: 80%;
+  }
+  
+  .alphanumeric-code {
+    font-size: 36px;
+    color: #e94560;
+    margin-bottom: 20px;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 2px;
+  }
+  
+  .copy-button {
+    background-color: #0f3460;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    font-size: 18px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .copy-button:hover {
+    background-color: #e94560;
+  }
+  
+  .close-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    color: #e94560;
+    font-size: 24px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+  <div class="button-container">
+    <button class="animated-button"></button>
+  </div>
+  
+  <div class="code-display">
+    <div class="code-container">
+      <h2 class="alphanumeric-code">hda1J3H3Wz0yibuZMBcp42X0GwFzON0k0q3CT1cM</h2>
+      <button class="copy-button">Copy Code</button>
+    </div>
+    <button class="close-button">&times;</button>
+  </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const button = document.querySelector('.animated-button');
+  const codeDisplay = document.querySelector('.code-display');
+  const closeButton = document.querySelector('.close-button');
+  const copyButton = document.querySelector('.copy-button');
+  const alphanumericCode = document.querySelector('.alphanumeric-code');
+
+  button.addEventListener('click', () => {
+    codeDisplay.style.display = 'flex';
+    animateCodeReveal();
+  });
+
+  closeButton.addEventListener('click', () => {
+    codeDisplay.style.display = 'none';
+  });
+
+  copyButton.addEventListener('click', () => {
+    navigator.clipboard.writeText(alphanumericCode.textContent).then(() => {
+      copyButton.textContent = 'Copied!';
+      setTimeout(() => {
+        copyButton.textContent = 'Copy Code';
+      }, 2000);
+    });
+  });
+
+  function animateCodeReveal() {
+    const code = alphanumericCode.textContent;
+    alphanumericCode.textContent = '';
+    let index = 0;
+
+    function revealNextChar() {
+      if (index < code.length) {
+        alphanumericCode.textContent += code[index];
+        index++;
+        setTimeout(revealNextChar, 50);
+      }
+    }
+
+    revealNextChar();
+  }
+});
+</script>
+</body>
+</html>
