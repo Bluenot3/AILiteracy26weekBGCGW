@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base href="https://api-key-generator.com/">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZEN API Key Generator & Obstacle Course</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js"></script>
+<style>
+  body, html {
+    margin: 0;
+    padding: 0;
+    overflow: auto;
+    font-family: 'Roboto', Arial, sans-serif;
+    background: radial-gradient(circle, rgba(63, 94, 251, 1) 0%, rgba(252, 70, 107, 1) 100%);
+  }
+  #canvas-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+  }
+  .content {
+    position: relative;
+    z-index: 1;
+    color: white;
+    text-align: center;
+    padding: 20px;
+    max-width: 95%;
+    margin: 2rem auto;
+    background-color: rgba(0, 0, 0, 0.8);
+    border-radius: 15px;
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3);
+    animation: fadeIn 2s ease-in-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    text-shadow: 0 0 15px #ffffff, 0 0 30px #00ffff, 0 0 45px #ff69b4;
+  }
+  h2 {
+    color: #eee;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+  }
+  .btn-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    flex: 1 0 calc(25% - 0.75rem);
+    max-width: 180px;
+  }
+  .btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  }
+  #chatgpt-btn { background-color: #10a37f; color: white; }
+  #claude-btn { background-color: #6b46c1; color: white; }
+  #llama-btn { background-color: #ff6b6b; color: white; }
+  #palm-btn { background-color: #4285f4; color: white; }
+  #cohere-btn { background-color: #333333; color: white; }
+  #openai-btn { background-color: #412991; color: white; }
+  #anthropic-btn { background-color: #0077b5; color: white; }
+  #huggingface-btn { background-color: #ffad00; color: black; }
+  #api-key {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    font-family: monospace;
+    word-break: break-all;
+    text-shadow: 0 0 10px #ffffff;
+  }
+  #obstacle-course {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  .test-btn {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    background-color: #007bff;
+    color: white;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  .test-btn:hover {
+    background-color: #0056b3;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  }
+  #results {
+    margin-top: 1.5rem;
+    text-align: left;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    border-radius: 5px;
+    white-space: pre-wrap;
+    overflow: auto;
+    max-height: 300px;
+  }
+  #chart-container {
+    margin-top: 2rem;
+    padding: 1rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  #comparison-container {
+    margin-top: 2rem;
+    padding: 1rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #007bff;
+    animation: spin 1s ease-in-out infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+</style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div class="content">
+    <h1>ZEN</h1>
+    <h2>API Key Generator & Obstacle Course</h2>
+    <div class="btn-container">
+      <button id="chatgpt-btn" class="btn">Chat GPT 4.0</button>
+      <button id="claude-btn" class="btn">Claude 3.5 Opus</button>
+      <button id="llama-btn" class="btn">Llama 3.1 405B</button>
+      <button id="palm-btn" class="btn">PaLM 2</button>
+      <button id="cohere-btn" class="btn">Cohere</button>
+      <button id="openai-btn" class="btn">OpenAI</button>
+      <button id="anthropic-btn" class="btn">Anthropic</button>
+      <button id="huggingface-btn" class="btn">Hugging Face</button>
+    </div>
+    <div id="api-key"></div>
+    <h3>ZEN API Obstacle Course</h3>
+    <div id="obstacle-course">
+      <button class="test-btn" data-test="text-completion">Text Completion</button>
+      <button class="test-btn" data-test="sentiment-analysis">Sentiment Analysis</button>
+      <button class="test-btn" data-test="named-entity-recognition">Named Entity Recognition</button>
+      <button class="test-btn" data-test="translation">Translation</button>
+      <button class="test-btn" data-test="summarization">Summarization</button>
+      <button class="test-btn" data-test="question-answering">Question Answering</button>
+      <button class="test-btn" data-test="image-generation">Image Generation</button>
+      <button class="test-btn" data-test="code-generation">Code Generation</button>
+      <button class="test-btn" data-test="text-classification">Text Classification</button>
+      <button class="test-btn" data-test="language-detection">Language Detection</button>
+      <button class="test-btn" data-test="performance-metrics">Performance Metrics</button>
+      <button class="test-btn" data-test="comparison">Compare APIs</button>
+    </div>
+    <div id="results"></div>
+    <div id="chart-container">
+      <canvas id="performance-chart"></canvas>
+    </div>
+    <div id="comparison-container">
+      <canvas id="comparison-chart"></canvas>
+    </div>
+  </div>
+
+  <script>
+    // Three.js background animation
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+    const geometry = new THREE.TorusKnotGeometry(10, 3, 200, 32);
+    const material = new THREE.MeshPhongMaterial({
+      color: 0x00ffff,
+      emissive: 0xff69b4,
+      specular: 0xffffff,
+      shininess: 150,
+      wireframe: true
+    });
+    const torusKnot = new THREE.Mesh(geometry, material);
+    scene.add(torusKnot);
+
+    const light = new THREE.PointLight(0xffffff, 1, 100);
+    light.position.set(0, 0, 30);
+    scene.add(light);
+
+    camera.position.z = 50;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      torusKnot.rotation.x += 0.005;
+      torusKnot.rotation.y += 0.005;
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // API Key Generation and Obstacle Course
+    function generateApiKey(prefix) {
+      const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let result = prefix;
+      const length = 48 - prefix.length;
+      for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+      }
+      return result;
+    }
+
+    function displayApiKey(key) {
+      document.getElementById('api-key').textContent = key;
+    }
+
+    const apiButtons = document.querySelectorAll('.btn-container .btn');
+    apiButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const prefix = button.id.split('-')[0].substring(0, 3);
+        const key = generateApiKey(prefix === 'cha' ? 'sk-' : prefix === 'ope' ? 'sk-' : prefix + '-');
+        displayApiKey(key);
+      });
+    });
+
+    async function simulateApiTest(testName, apiKey) {
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = `<div class="loading"></div> Running ${testName}...`;
+
+      const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+      switch (testName) {
+        case 'text-completion':
+          await delay(2000);
+          resultsDiv.innerHTML = `Text Completion Result:<br>API Key: ${apiKey}<br>Input: "The quick brown fox"<br>Output: "The quick brown fox jumps over the lazy dog."`;
+          break;
+        case 'sentiment-analysis':
+          await delay(1500);
+          resultsDiv.innerHTML = `Sentiment Analysis Result:<br>API Key: ${apiKey}<br>Input: "I love this product!"<br>Output: Positive (0.92)`;
+          break;
+        case 'named-entity-recognition':
+          await delay(2500);
+          resultsDiv.innerHTML = `Named Entity Recognition Result:<br>API Key: ${apiKey}<br>Input: "Apple Inc. is headquartered in Cupertino, California."<br>Output: [Apple Inc.: ORG, Cupertino: LOC, California: LOC]`;
+          break;
+        case 'translation':
+          await delay(2000);
+          resultsDiv.innerHTML = `Translation Result:<br>API Key: ${apiKey}<br>Input: "Hello, how are you?" (English)<br>Output: "Hola, ¿cómo estás?" (Spanish)`;
+          break;
+        case 'summarization':
+          await delay(3000);
+          resultsDiv.innerHTML = `Summarization Result:<br>API Key: ${apiKey}<br>Input: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."<br>Output: "A passage about the purpose and benefits of hard work and exercise."`;
+          break;
+        case 'question-answering':
+          await delay(2500);
+          resultsDiv.innerHTML = `Question Answering Result:<br>API Key: ${apiKey}<br>Context: "The Eiffel Tower is a wrought-iron lattice tower on the Champ de Mars in Paris, France."<br>Question: "Where is the Eiffel Tower located?"<br>Answer: "The Eiffel Tower is located in Paris, France."`;
+          break;
+        case 'image-generation':
+          await delay(4000);
+          resultsDiv.innerHTML = `Image Generation Result:<br>API Key: ${apiKey}<br>Prompt: "A futuristic city with flying cars"<br>Output: [Generated image would be displayed here]`;
+          break;
+        case 'code-generation':
+          await delay(2500);
+          resultsDiv.innerHTML = `Code Generation Result:<br>API Key: ${apiKey}<br>Prompt: "Write a Python function to calculate the factorial of a number"<br>Output:<pre>def factorial(n):
+    if n == 0 or n == 1:
+        return 1
+    else:
+        return n * factorial(n - 1)</pre>`;
+          break;
+        case 'text-classification':
+          await delay(1800);
+          resultsDiv.innerHTML = `Text Classification Result:<br>API Key: ${apiKey}<br>Input: "This movie was absolutely terrible. I hated every minute of it."<br>Output: Category: Negative Review (Confidence: 0.95)`;
+          break;
+        case 'language-detection':
+          await delay(1500);
+          resultsDiv.innerHTML = `Language Detection Result:<br>API Key: ${apiKey}<br>Input: "Bonjour, comment allez-vous?"<br>Output: Detected Language: French (Confidence: 0.98)`;
+          break;
+        case 'performance-metrics':
+          await delay(3000);
+          resultsDiv.innerHTML = `Performance Metrics Result:<br>API Key: ${apiKey}<br>Calculating performance metrics...`;
+          document.getElementById('chart-container').style.display = 'block';
+          generatePerformanceChart();
+          break;
+        case 'comparison':
+          await delay(3000);
+          resultsDiv.innerHTML = `API Comparison:<br>API Key: ${apiKey}<br>Comparing API performances...`;
+          document.getElementById('comparison-container').style.display = 'block';
+          generateComparisonChart();
+          break;
+        default:
+          resultsDiv.innerHTML = `Unknown test: ${testName}`;
+      }
+    }
+
+    function generatePerformanceChart() {
+      const ctx = document.getElementById('performance-chart').getContext('2d');
+      const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Latency', 'Throughput', 'Error Rate', 'Memory Usage'],
+          datasets: [{
+            label: 'Performance Metrics',
+            data: [200, 300, 1.2, 150],
+            backgroundColor: [
+              'rgba(75, 192, 192, 0.2)',
+              'rgba(54, 162, 235, 0.2)',
+              'rgba(255, 99, 132, 0.2)',
+              'rgba(153, 102, 255, 0.2)'
+            ],
+            borderColor: [
+              'rgba(75, 192, 192, 1)',
+              'rgba(54, 162, 235, 1)',
+              'rgba(255, 99, 132, 1)',
+              'rgba(153, 102, 255, 1)'
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
+    function generateComparisonChart() {
+      const ctx = document.getElementById('comparison-chart').getContext('2d');
+      const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['API 1', 'API 2', 'API 3', 'API 4'],
+          datasets: [{
+            label: 'Latency (ms)',
+            data: [150, 200, 180, 170],
+            borderColor: 'rgba(54, 162, 235, 1)',
+            fill: false
+          }, {
+            label: 'Throughput (req/sec)',
+            data: [300, 250, 270, 290],
+            borderColor: 'rgba(75, 192, 192, 1)',
+            fill: false
+          }, {
+            label: 'Error Rate (%)',
+            data: [1.5, 2.0, 1.8, 1.3],
+            borderColor: 'rgba(255, 99, 132, 1)',
+            fill: false
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
+    const obstacleButtons = document.querySelectorAll('.test-btn');
+
+    obstacleButtons.forEach(button => {
+      button.addEventListener('click', async () => {
+        const testName = button.dataset.test;
+        const apiKey = document.getElementById('api-key').textContent;
+
+        if (!apiKey) {
+          document.getElementById('results').textContent = 'Please generate an API key first.';
+          return;
+        }
+
+        button.disabled = true;
+        await simulateApiTest(testName, apiKey);
+        button.disabled = false;
+      });
+    });
+  </script>
+</body>
+</html>
