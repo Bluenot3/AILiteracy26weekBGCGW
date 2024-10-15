@@ -1,0 +1,746 @@
+<html><head><base href="https://websim.mydomain.com/cohere-game-creator/">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cohere API Game Creator</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 20px;
+  }
+  #gameContainer {
+    display: none;
+    margin-top: 20px;
+    max-width: 800px;
+    width: 100%;
+  }
+  canvas {
+    border: 2px solid #333;
+    max-width: 100%;
+  }
+  #controls {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  input, select, button {
+    margin: 5px;
+    padding: 5px;
+  }
+  #apiKeyInput {
+    width: 300px;
+  }
+  #customizationPanel {
+    display: none;
+    margin-top: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  #customizationPanel input[type="color"] {
+    width: 50px;
+  }
+</style>
+</head>
+<body>
+  <h1>Cohere API Game Creator</h1>
+  <div id="controls">
+    <input type="text" id="apiKeyInput" placeholder="Enter your Cohere API key">
+    <select id="gameType">
+      <option value="tetris">Tetris</option>
+      <option value="snake">Snake</option>
+      <option value="pong">Pong</option>
+      <option value="breakout">Breakout</option>
+      <option value="flappyBird">Flappy Bird</option>
+    </select>
+    <select id="gameTheme">
+      <option value="classic">Classic</option>
+      <option value="neon">Neon</option>
+      <option value="pastel">Pastel</option>
+      <option value="monochrome">Monochrome</option>
+    </select>
+    <button onclick="generateGame()">Generate Game</button>
+  </div>
+  <div id="customizationPanel">
+    <h3>Customize Your Game</h3>
+    <div id="customOptions"></div>
+  </div>
+  <div id="gameContainer">
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let game = null;
+    let customization = {};
+
+    const colors = {
+      classic: ['#00FFFF', '#0000FF', '#FFA500', '#FFFF00', '#00FF00', '#800080', '#FF0000'],
+      neon: ['#00FFFF', '#0000FF', '#FF8000', '#FFFF00', '#00FF00', '#8000FF', '#FF0000'],
+      pastel: ['#A7E8BD', '#A7C8E8', '#E8C9A7', '#E8E4A7', '#BDE8A7', '#D3A7E8', '#E8A7A7'],
+      monochrome: ['#FFFFFF', '#DDDDDD', '#BBBBBB', '#999999', '#777777', '#555555', '#333333']
+    };
+
+    function generateGame() {
+      const apiKey = document.getElementById('apiKeyInput').value;
+      const gameType = document.getElementById('gameType').value;
+      const theme = document.getElementById('gameTheme').value;
+      
+      if (!apiKey) {
+        alert('Please enter your Cohere API key');
+        return;
+      }
+
+      customization = {
+        colorScheme: colors[theme],
+        speed: 1,
+        difficulty: 'normal'
+      };
+
+      document.getElementById('gameContainer').style.display = 'block';
+      document.getElementById('customizationPanel').style.display = 'block';
+      
+      setupCustomizationPanel(gameType);
+      startGame(gameType);
+    }
+
+    function setupCustomizationPanel(gameType) {
+      const customOptions = document.getElementById('customOptions');
+      customOptions.innerHTML = '';
+
+      const commonOptions = `
+        <label>Game Speed: <input type="range" min="0.5" max="2" step="0.1" value="1" onchange="updateCustomization('speed', this.value)"></label>
+        <label>Difficulty: 
+          <select onchange="updateCustomization('difficulty', this.value)">
+            <option value="easy">Easy</option>
+            <option value="normal" selected>Normal</option>
+            <option value="hard">Hard</option>
+          </select>
+        </label>
+        <label>Background Color: <input type="color" value="#f0f0f0" onchange="updateCustomization('backgroundColor', this.value)"></label>
+      `;
+
+      let gameSpecificOptions = '';
+      switch (gameType) {
+        case 'tetris':
+          gameSpecificOptions = `
+            <label>Block Color: <input type="color" value="#00FFFF" onchange="updateCustomization('blockColor', this.value)"></label>
+          `;
+          break;
+        case 'snake':
+          gameSpecificOptions = `
+            <label>Snake Color: <input type="color" value="#00FF00" onchange="updateCustomization('snakeColor', this.value)"></label>
+            <label>Food Color: <input type="color" value="#FF0000" onchange="updateCustomization('foodColor', this.value)"></label>
+          `;
+          break;
+        case 'pong':
+          gameSpecificOptions = `
+            <label>Paddle Color: <input type="color" value="#FFFFFF" onchange="updateCustomization('paddleColor', this.value)"></label>
+            <label>Ball Color: <input type="color" value="#FFFFFF" onchange="updateCustomization('ballColor', this.value)"></label>
+          `;
+          break;
+        case 'breakout':
+          gameSpecificOptions = `
+            <label>Paddle Color: <input type="color" value="#0000FF" onchange="updateCustomization('paddleColor', this.value)"></label>
+            <label>Ball Color: <input type="color" value="#FF0000" onchange="updateCustomization('ballColor', this.value)"></label>
+            <label>Brick Color: <input type="color" value="#00FF00" onchange="updateCustomization('brickColor', this.value)"></label>
+          `;
+          break;
+        case 'flappyBird':
+          gameSpecificOptions = `
+            <label>Bird Color: <input type="color" value="#FFFF00" onchange="updateCustomization('birdColor', this.value)"></label>
+            <label>Pipe Color: <input type="color" value="#00FF00" onchange="updateCustomization('pipeColor', this.value)"></label>
+          `;
+          break;
+      }
+
+      customOptions.innerHTML = commonOptions + gameSpecificOptions;
+    }
+
+    function updateCustomization(key, value) {
+      customization[key] = value;
+      if (game && game.updateCustomization) {
+        game.updateCustomization(customization);
+      }
+    }
+
+    function startGame(gameType) {
+      if (game && game.stop) {
+        game.stop();
+      }
+
+      switch (gameType) {
+        case 'tetris':
+          game = new TetrisGame(canvas, customization);
+          break;
+        case 'snake':
+          game = new SnakeGame(canvas, customization);
+          break;
+        case 'pong':
+          game = new PongGame(canvas, customization);
+          break;
+        case 'breakout':
+          game = new BreakoutGame(canvas, customization);
+          break;
+        case 'flappyBird':
+          game = new FlappyBirdGame(canvas, customization);
+          break;
+      }
+
+      game.start();
+    }
+
+    class TetrisGame {
+      constructor(canvas, customization) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.customization = customization;
+        this.grid = 20;
+        this.tetrominoSequence = [];
+        this.playfield = Array.from({length: 20}, () => Array(10).fill(0));
+        this.tetromino = this.getNextTetromino();
+        this.rAF = null;
+        this.gameOver = false;
+      }
+
+      updateCustomization(newCustomization) {
+        this.customization = {...this.customization, ...newCustomization};
+      }
+
+      start() {
+        this.rAF = requestAnimationFrame(this.loop.bind(this));
+      }
+
+      stop() {
+        cancelAnimationFrame(this.rAF);
+      }
+
+      getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      generateSequence() {
+        const sequence = ['I', 'J', 'L', 'O', 'S', 'T', 'Z'];
+        while (sequence.length) {
+          const rand = this.getRandomInt(0, sequence.length - 1);
+          const name = sequence.splice(rand, 1)[0];
+          this.tetrominoSequence.push(name);
+        }
+      }
+
+      getNextTetromino() {
+        if (this.tetrominoSequence.length === 0) {
+          this.generateSequence();
+        }
+        const name = this.tetrominoSequence.pop();
+        const matrix = this.tetrominos[name];
+        const col = this.playfield[0].length / 2 - Math.ceil(matrix[0].length / 2);
+        const row = name === 'I' ? -1 : -2;
+        return {
+          name: name,
+          matrix: matrix,
+          row: row,
+          col: col
+        };
+      }
+
+      rotate(matrix) {
+        const N = matrix.length;
+        const result = matrix.map((row, i) =>
+          row.map((val, j) => matrix[N - 1 - j][i])
+        );
+        return result;
+      }
+
+      isValidMove(matrix, cellRow, cellCol) {
+        for (let row = 0; row < matrix.length; row++) {
+          for (let col = 0; col < matrix[row].length; col++) {
+            if (matrix[row][col] && (
+                cellCol + col < 0 ||
+                cellCol + col >= this.playfield[0].length ||
+                cellRow + row >= this.playfield.length ||
+                this.playfield[cellRow + row][cellCol + col])
+              ) {
+              return false;
+            }
+          }
+        }
+        return true;
+      }
+
+      placeTetromino() {
+        for (let row = 0; row < this.tetromino.matrix.length; row++) {
+          for (let col = 0; col < this.tetromino.matrix[row].length; col++) {
+            if (this.tetromino.matrix[row][col]) {
+              if (this.tetromino.row + row < 0) {
+                return this.showGameOver();
+              }
+              this.playfield[this.tetromino.row + row][this.tetromino.col + col] = this.tetromino.name;
+            }
+          }
+        }
+        for (let row = this.playfield.length - 1; row >= 0; ) {
+          if (this.playfield[row].every(cell => !!cell)) {
+            for (let r = row; r >= 0; r--) {
+              for (let c = 0; c < this.playfield[r].length; c++) {
+                this.playfield[r][c] = this.playfield[r-1][c];
+              }
+            }
+          }
+          else {
+            row--;
+          }
+        }
+        this.tetromino = this.getNextTetromino();
+      }
+
+      showGameOver() {
+        cancelAnimationFrame(this.rAF);
+        this.gameOver = true;
+        this.ctx.fillStyle = 'black';
+        this.ctx.globalAlpha = 0.75;
+        this.ctx.fillRect(0, this.canvas.height / 2 - 30, this.canvas.width, 60);
+        this.ctx.globalAlpha = 1;
+        this.ctx.fillStyle = 'white';
+        this.ctx.font = '36px monospace';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText('GAME OVER!', this.canvas.width / 2, this.canvas.height / 2);
+      }
+
+      loop() {
+        this.rAF = requestAnimationFrame(this.loop.bind(this));
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        for (let row = 0; row < 20; row++) {
+          for (let col = 0; col < 10; col++) {
+            if (this.playfield[row][col]) {
+              const name = this.playfield[row][col];
+              this.ctx.fillStyle = this.customization.blockColor || this.customization.colorScheme[0];
+              this.ctx.fillRect(col * this.grid, row * this.grid, this.grid - 1, this.grid - 1);
+            }
+          }
+        }
+
+        if (this.tetromino) {
+          if (++this.count > 35) {
+            this.tetromino.row++;
+            this.count = 0;
+            if (!this.isValidMove(this.tetromino.matrix, this.tetromino.row, this.tetromino.col)) {
+              this.tetromino.row--;
+              this.placeTetromino();
+            }
+          }
+
+          this.ctx.fillStyle = this.customization.blockColor || this.customization.colorScheme[0];
+
+          for (let row = 0; row < this.tetromino.matrix.length; row++) {
+            for (let col = 0; col < this.tetromino.matrix[row].length; col++) {
+              if (this.tetromino.matrix[row][col]) {
+                this.ctx.fillRect((this.tetromino.col + col) * this.grid, (this.tetromino.row + row) * this.grid, this.grid - 1, this.grid - 1);
+              }
+            }
+          }
+        }
+      }
+
+      tetrominos = {
+        'I': [
+          [0,0,0,0],
+          [1,1,1,1],
+          [0,0,0,0],
+          [0,0,0,0]
+        ],
+        'J': [
+          [1,0,0],
+          [1,1,1],
+          [0,0,0],
+        ],
+        'L': [
+          [0,0,1],
+          [1,1,1],
+          [0,0,0],
+        ],
+        'O': [
+          [1,1],
+          [1,1],
+        ],
+        'S': [
+          [0,1,1],
+          [1,1,0],
+          [0,0,0],
+        ],
+        'Z': [
+          [1,1,0],
+          [0,1,1],
+          [0,0,0],
+        ],
+        'T': [
+          [0,1,0],
+          [1,1,1],
+          [0,0,0],
+        ]
+      };
+    }
+
+    class SnakeGame {
+      constructor(canvas, customization) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.customization = customization;
+        this.gridSize = 20;
+        this.snake = [{x: 10, y: 10}];
+        this.direction = {x: 1, y: 0};
+        this.food = this.generateFood();
+        this.score = 0;
+        this.gameOver = false;
+      }
+
+      updateCustomization(newCustomization) {
+        this.customization = {...this.customization, ...newCustomization};
+      }
+
+      start() {
+        document.addEventListener('keydown', this.handleKeyPress.bind(this));
+        this.gameLoop();
+      }
+
+      stop() {
+        this.gameOver = true;
+      }
+
+      generateFood() {
+        return {
+          x: Math.floor(Math.random() * (this.canvas.width / this.gridSize)),
+          y: Math.floor(Math.random() * (this.canvas.height / this.gridSize))
+        };
+      }
+
+      handleKeyPress(e) {
+        switch(e.key) {
+          case 'ArrowUp':
+            if (this.direction.y === 0) this.direction = {x: 0, y: -1};
+            break;
+          case 'ArrowDown':
+            if (this.direction.y === 0) this.direction = {x: 0, y: 1};
+            break;
+          case 'ArrowLeft':
+            if (this.direction.x === 0) this.direction = {x: -1, y: 0};
+            break;
+          case 'ArrowRight':
+            if (this.direction.x === 0) this.direction = {x: 1, y: 0};
+            break;
+        }
+      }
+
+      update() {
+        const head = {x: this.snake[0].x + this.direction.x, y: this.snake[0].y + this.direction.y};
+        
+        if (head.x < 0 || head.x >= this.canvas.width / this.gridSize ||
+            head.y < 0 || head.y >= this.canvas.height / this.gridSize ||
+            this.snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+          this.gameOver = true;
+          return;
+        }
+
+        this.snake.unshift(head);
+
+        if (head.x === this.food.x && head.y === this.food.y) {
+          this.score++;
+          this.food = this.generateFood();
+        } else {
+          this.snake.pop();
+        }
+      }
+
+      draw() {
+        this.ctx.fillStyle = this.customization.backgroundColor || '#f0f0f0';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.ctx.fillStyle = this.customization.snakeColor || '#00FF00';
+        this.snake.forEach(segment => {
+          this.ctx.fillRect(segment.x * this.gridSize, segment.y * this.gridSize, this.gridSize, this.gridSize);
+        });
+
+        this.ctx.fillStyle = this.customization.foodColor || '#FF0000';
+        this.ctx.fillRect(this.food.x * this.gridSize, this.food.y * this.gridSize, this.gridSize, this.gridSize);
+
+        this.ctx.fillStyle = '#000000';
+        this.ctx.font = '20px Arial';
+        this.ctx.fillText(`Score: ${this.score}`, 10, 30);
+      }
+
+      gameLoop() {
+        if (this.gameOver) {
+          this.ctx.fillStyle = 'black';
+          this.ctx.font = '36px Arial';
+          this.ctx.fillText('Game Over!', this.canvas.width / 2 - 80, this.canvas.height / 2);
+          return;
+        }
+
+        this.update();
+        this.draw();
+        setTimeout(() => requestAnimationFrame(this.gameLoop.bind(this)), 1000 / (5 * this.customization.speed));
+      }
+    }
+
+    class PongGame {
+      constructor(canvas, customization) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.customization = customization;
+        this.paddleHeight = 100;
+        this.paddleWidth = 10;
+        this.ballSize = 10;
+        this.player1 = {y: this.canvas.height / 2 - this.paddleHeight / 2};
+        this.player2 = {y: this.canvas.height / 2 - this.paddleHeight / 2};
+        this.ball = {x: this.canvas.width / 2, y: this.canvas.height / 2, dx: 5, dy: 5};
+        this.score = {player1: 0, player2: 0};
+      }
+
+      updateCustomization(newCustomization) {
+        this.customization = {...this.customization, ...newCustomization};
+      }
+
+      start() {
+        document.addEventListener('keydown', this.handleKeyPress.bind(this));
+        document.addEventListener('keyup', this.handleKeyRelease.bind(this));
+        this.gameLoop();
+      }
+
+      stop() {
+        // Implement stop logic if needed
+      }
+
+      handleKeyPress(e) {
+        if (e.key === 'ArrowUp') this.player2.dy = -5;
+        if (e.key === 'ArrowDown') this.player2.dy = 5;
+        if (e.key === 'w') this.player1.dy = -5;
+        if (e.key === 's') this.player1.dy = 5;
+      }
+
+      handleKeyRelease(e) {
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') this.player2.dy = 0;
+        if (e.key === 'w' || e.key === 's') this.player1.dy = 0;
+      }
+
+      update() {
+        this.player1.y += this.player1.dy || 0;
+        this.player2.y += this.player2.dy || 0;
+
+        this.player1.y = Math.max(0, Math.min(this.canvas.height - this.paddleHeight, this.player1.y));
+        this.player2.y = Math.max(0, Math.min(this.canvas.height - this.paddleHeight, this.player2.y));
+
+        this.ball.x += this.ball.dx;
+        this.ball.y += this.ball.dy;
+
+        if (this.ball.y < 0 || this.ball.y > this.canvas.height - this.ballSize) {
+          this.ball.dy *= -1;
+        }
+
+        if (
+          (this.ball.x < this.paddleWidth && this.ball.y > this.player1.y && this.ball.y < this.player1.y + this.paddleHeight) ||
+          (this.ball.x > this.canvas.width - this.paddleWidth - this.ballSize && this.ball.y > this.player2.y && this.ball.y < this.player2.y + this.paddleHeight)
+        ) {
+          this.ball.dx *= -1.1;
+        }
+
+        if (this.ball.x < 0) {
+          this.score.player2++;
+          this.resetBall();
+        } else if (this.ball.x > this.canvas.width) {
+          this.score.player1++;
+          this.resetBall();
+        }
+      }
+
+      resetBall() {
+        this.ball = {x: this.canvas.width / 2, y: this.canvas.height / 2, dx: 5 * (Math.random() > 0.5 ? 1 : -1), dy: 5 * (Math.random() > 0.5 ? 1 : -1)};
+      }
+
+      draw() {
+        this.ctx.fillStyle = this.customization.backgroundColor || '#000000';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.ctx.fillStyle = this.customization.paddleColor || '#FFFFFF';
+        this.ctx.fillRect(0, this.player1.y, this.paddleWidth, this.paddleHeight);
+        this.ctx.fillRect(this.canvas.width - this.paddleWidth, this.player2.y, this.paddleWidth, this.paddleHeight);
+
+        this.ctx.fillStyle = this.customization.ballColor || '#FFFFFF';
+        this.ctx.fillRect(this.ball.x, this.ball.y, this.ballSize, this.ballSize);
+
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.font = '24px Arial';
+        this.ctx.fillText(this.score.player1, this.canvas.width / 4, 30);
+        this.ctx.fillText(this.score.player2, 3 * this.canvas.width / 4, 30);
+      }
+
+      gameLoop() {
+        this.update();
+        this.draw();
+        requestAnimationFrame(this.gameLoop.bind(this));
+      }
+    }
+
+    class BreakoutGame {
+      constructor(canvas, customization) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.customization = customization;
+        this.paddleHeight = 10;
+        this.paddleWidth = 75;
+        this.ballRadius = 10;
+        this.paddle = {x: this.canvas.width / 2 - this.paddleWidth / 2, y: this.canvas.height - this.paddleHeight};
+        this.ball = {x: this.canvas.width / 2, y: this.canvas.height - 30, dx: 4, dy: -4};
+        this.brickRowCount = 3;
+        this.brickColumnCount = 5;
+        this.brickWidth = 75;
+        this.brickHeight = 20;
+        this.brickPadding = 10;
+        this.brickOffsetTop = 30;
+        this.brickOffsetLeft = 30;
+        this.bricks = [];
+        this.score = 0;
+        this.gameOver = false;
+        this.initBricks();
+      }
+
+      updateCustomization(newCustomization) {
+        this.customization = {...this.customization, ...newCustomization};
+      }
+
+      initBricks() {
+        for (let c = 0; c < this.brickColumnCount; c++) {
+          this.bricks[c] = [];
+          for (let r = 0; r < this.brickRowCount; r++) {
+            this.bricks[c][r] = {x: 0, y: 0, status: 1};
+          }
+        }
+      }
+
+      start() {
+        document.addEventListener('mousemove', this.handleMouseMove.bind(this));
+        this.gameLoop();
+      }
+
+      stop() {
+        this.gameOver = true;
+      }
+
+      handleMouseMove(e) {
+        const relativeX = e.clientX - this.canvas.offsetLeft;
+        if (relativeX > 0 && relativeX < this.canvas.width) {
+          this.paddle.x = relativeX - this.paddleWidth / 2;
+        }
+      }
+
+      collisionDetection() {
+        for (let c = 0; c < this.brickColumnCount; c++) {
+          for (let r = 0; r < this.brickRowCount; r++) {
+            const b = this.bricks[c][r];
+            if (b.status === 1) {
+              if (this.ball.x > b.x && this.ball.x < b.x + this.brickWidth && this.ball.y > b.y && this.ball.y < b.y + this.brickHeight) {
+                this.ball.dy = -this.ball.dy;
+                b.status = 0;
+                this.score++;
+                if (this.score === this.brickRowCount * this.brickColumnCount) {
+                  alert('YOU WIN, CONGRATULATIONS!');
+                  this.stop();
+                }
+              }
+            }
+          }
+        }
+      }
+
+      update() {
+        if (this.ball.x + this.ball.dx > this.canvas.width - this.ballRadius || this.ball.x + this.ball.dx < this.ballRadius) {
+          this.ball.dx = -this.ball.dx;
+        }
+        if (this.ball.y + this.ball.dy < this.ballRadius) {
+          this.ball.dy = -this.ball.dy;
+        } else if (this.ball.y + this.ball.dy > this.canvas.height - this.ballRadius) {
+          if (this.ball.x > this.paddle.x && this.ball.x < this.paddle.x + this.paddleWidth) {
+            this.ball.dy = -this.ball.dy;
+          } else {
+            alert('GAME OVER');
+            this.stop();
+          }
+        }
+
+        this.ball.x += this.ball.dx;
+        this.ball.y += this.ball.dy;
+
+        this.collisionDetection();
+      }
+
+      draw() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.drawBricks();
+        this.drawBall();
+        this.drawPaddle();
+        this.drawScore();
+      }
+
+      drawBricks() {
+        for (let c = 0; c < this.brickColumnCount; c++) {
+          for (let r = 0; r < this.brickRowCount; r++) {
+            if (this.bricks[c][r].status === 1) {
+              const brickX = (c * (this.brickWidth + this.brickPadding)) + this.brickOffsetLeft;
+              const brickY = (r * (this.brickHeight + this.brickPadding)) + this.brickOffsetTop;
+              this.bricks[c][r].x = brickX;
+              this.bricks[c][r].y = brickY;
+              this.ctx.beginPath();
+              this.ctx.rect(brickX, brickY, this.brickWidth, this.brickHeight);
+              this.ctx.fillStyle = this.customization.brickColor || '#0095DD';
+              this.ctx.fill();
+              this.ctx.closePath();
+            }
+          }
+        }
+      }
+
+      drawBall() {
+        this.ctx.beginPath();
+        this.ctx.arc(this.ball.x, this.ball.y, this.ballRadius, 0, Math.PI * 2);
+        this.ctx.fillStyle = this.customization.ballColor || '#0095DD';
+        this.ctx.fill();
+        this.ctx.closePath();
+      }
+
+      drawPaddle() {
+        this.ctx.beginPath();
+        this.ctx.rect(this.paddle.x, this.canvas.height - this.paddleHeight, this.paddleWidth, this.paddleHeight);
+        this.ctx.fillStyle = this.customization.paddleColor || '#0095DD';
+        this.ctx.fill();
+        this.ctx.closePath();
+      }
+
+      drawScore() {
+        this.ctx.font = '16px Arial';
+        this.ctx.fillStyle = '#0095DD';
+        this.ctx.fillText('Score: ' + this.score, 8, 20);
+      }
+
+      gameLoop() {
+        if (!this.gameOver) {
+          this.update();
+          this.draw();
+          requestAnimationFrame(this.gameLoop.bind(this));
+        }
+      }
+    }
+
+    class FlappyBirdGame {
+      // Flappy Bird game implementation would go here
+    }
+  </script>
+</body>
+</html>
