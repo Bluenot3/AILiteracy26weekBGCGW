@@ -1,0 +1,323 @@
+<html><head><base href="https://zen-ai-learning.example.com/">
+    <title>ZEN AI Advanced Learning Environment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/theme/dracula.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.6/axios.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4A90E2;
+            --secondary-color: #357ABD;
+            --background-color: #eef2f7;
+            --text-color: #333;
+            --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1.5em;
+            text-align: center;
+            box-shadow: var(--box-shadow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            padding: 1em;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        #editor-container, #preview-container {
+            width: 50%;
+            padding: 1em;
+            box-sizing: border-box;
+        }
+
+        #editor {
+            height: calc(100vh - 200px);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+        }
+
+        #preview {
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            overflow: hidden;
+            height: calc(100vh - 200px);
+            box-shadow: var(--box-shadow);
+        }
+
+        .help-box {
+            background-color: #e0f3ff;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            color: var(--text-color);
+            box-shadow: var(--box-shadow);
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s, transform 0.2s;
+            box-shadow: var(--box-shadow);
+            margin: 5px;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+            transform: scale(1.05);
+        }
+
+        footer {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 1em;
+            box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: auto;
+        }
+
+        .footer-text {
+            font-size: 0.9em;
+        }
+
+        #ai-output {
+            background-color: #f8f9fc;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 1024px) {
+            main {
+                flex-direction: column;
+            }
+
+            #editor-container, #preview-container {
+                width: 100%;
+            }
+
+            #editor, #preview {
+                height: 50vh;
+            }
+        }
+    </style>
+    <script>
+        let editor;
+
+        function initCodeMirror() {
+            editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+                lineNumbers: true,
+                mode: "htmlmixed",
+                theme: "dracula",
+                autoCloseTags: true,
+                autoCloseBrackets: true,
+                matchBrackets: true,
+                indentUnit: 4,
+                tabSize: 4,
+                indentWithTabs: true,
+                lineWrapping: true
+            });
+
+            editor.on("change", function() {
+                updatePreview();
+            });
+        }
+
+        function updatePreview() {
+            const code = editor.getValue();
+            const previewFrame = document.getElementById('previewFrame').contentWindow.document;
+            previewFrame.open();
+            previewFrame.write(code);
+            previewFrame.close();
+        }
+
+        function addAICode() {
+            const aiCode = '<iframe src="https://example-ai-tool.com/widget" width="100%" height="400" style="border: 1px solid #ccc; border-radius: 10px;"></iframe>';
+            editor.replaceSelection(aiCode);
+            updatePreview();
+        }
+
+        function addImage() {
+            const imageCode = '<img src="https://via.placeholder.com/400" alt="Sample Image" style="max-width: 100%; border-radius: 10px;" />';
+            editor.replaceSelection(imageCode);
+            updatePreview();
+        }
+
+        function addButton() {
+            const buttonCode = '<button style="padding: 10px 20px; background-color: #4A90E2; color: white; border: none; border-radius: 5px; cursor: pointer;">Click Me!</button>';
+            editor.replaceSelection(buttonCode);
+            updatePreview();
+        }
+
+        async function generateImage() {
+            const prompt = document.getElementById('imagePrompt').value;
+            if (!prompt) {
+                alert('Please enter a prompt for image generation.');
+                return;
+            }
+
+            try {
+                const response = await axios.post('https://api.openai.com/v1/images/generations', {
+                    prompt: prompt,
+                    n: 1,
+                    size: "512x512"
+                }, {
+                    headers: {
+                        'Authorization': 'Bearer YOUR_OPENAI_API_KEY',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const imageUrl = response.data.data[0].url;
+                const imageCode = `<img src="${imageUrl}" alt="${prompt}" style="max-width: 100%; border-radius: 10px;" />`;
+                editor.replaceSelection(imageCode);
+                updatePreview();
+            } catch (error) {
+                console.error('Error generating image:', error);
+                alert('Error generating image. Please check the console for details.');
+            }
+        }
+
+        async function askAI() {
+            const prompt = document.getElementById('aiPrompt').value;
+            if (!prompt) {
+                alert('Please enter a prompt for the AI.');
+                return;
+            }
+
+            try {
+                const response = await axios.post('https://api.openai.com/v1/chat/completions', {
+                    model: "gpt-3.5-turbo",
+                    messages: [{role: "user", content: prompt}],
+                    max_tokens: 150
+                }, {
+                    headers: {
+                        'Authorization': 'Bearer YOUR_OPENAI_API_KEY',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const aiResponse = response.data.choices[0].message.content;
+                document.getElementById('ai-output').innerText = aiResponse;
+            } catch (error) {
+                console.error('Error asking AI:', error);
+                alert('Error asking AI. Please check the console for details.');
+            }
+        }
+
+        window.onload = function() {
+            initCodeMirror();
+            updatePreview();
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <h1>ZEN AI Advanced Learning Environment</h1>
+    </header>
+    <main>
+        <div id="editor-container">
+            <div class="help-box">
+                <p><strong>Tip for Students:</strong> Experiment with different HTML elements, AI tools, and image generation to enhance your learning experience.</p>
+                <button onclick="addAICode()"><i class="fas fa-robot"></i> Add AI Widget</button>
+                <button onclick="addImage()"><i class="fas fa-image"></i> Add Image</button>
+                <button onclick="addButton()"><i class="fas fa-mouse-pointer"></i> Add Button</button>
+                <div style="margin-top: 10px;">
+                    <input type="text" id="imagePrompt" placeholder="Enter image prompt" style="padding: 5px; width: 200px;">
+                    <button onclick="generateImage()"><i class="fas fa-paint-brush"></i> Generate Image</button>
+                </div>
+                <div style="margin-top: 10px;">
+                    <input type="text" id="aiPrompt" placeholder="Ask AI a question" style="padding: 5px; width: 200px;">
+                    <button onclick="askAI()"><i class="fas fa-brain"></i> Ask AI</button>
+                </div>
+                <div id="ai-output"></div>
+            </div>
+            <div id="editor">
+                <textarea id="code">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to ZEN AI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #eef2f7;
+            padding: 20px;
+        }
+        h1 {
+            color: #4A90E2;
+        }
+        .content-box {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>Hello, ZEN AI Students!</h1>
+    <div class="content-box">
+        <p>Edit the code in the editor to see the preview here. You can add your own HTML, CSS, and JavaScript!</p>
+        <!-- You can embed AI in an iframe like this: -->
+        <!--
+        <iframe src="https://example-ai-tool.com/widget" width="100%" height="400"></iframe>
+        -->
+    </div>
+</body>
+</html>
+                </textarea>
+            </div>
+        </div>
+        <div id="preview-container">
+            <div id="preview">
+                <iframe id="previewFrame" style="width:100%; height:100%; border:0;"></iframe>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <p class="footer-text">Powered by ZEN AI Learning Environment | Learn, Create, Innovate</p>
+    </footer>
+</body>
+</html>
