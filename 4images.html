@@ -1,0 +1,309 @@
+<html><head><base href="https://websimcreationengine.com/dynamic-image-generator/">
+
+<title>ZEN AI Module 4 Week 7 - Advanced Dynamic Image Generator</title>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 20px;
+        box-sizing: border-box;
+        color: #e94560;
+    }
+    .container {
+        background-color: rgba(26, 26, 46, 0.9);
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(233, 69, 96, 0.2);
+        max-width: 1200px;
+        width: 100%;
+    }
+    h1 {
+        font-family: 'Orbitron', sans-serif;
+        color: #e94560;
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 3em;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        text-shadow: 0 0 10px #e94560, 0 0 20px #e94560, 0 0 30px #e94560;
+        animation: glow 1.5s ease-in-out infinite alternate;
+    }
+    @keyframes glow {
+        from {
+            text-shadow: 0 0 5px #e94560, 0 0 10px #e94560, 0 0 15px #e94560;
+        }
+        to {
+            text-shadow: 0 0 10px #e94560, 0 0 20px #e94560, 0 0 30px #e94560, 0 0 40px #e94560;
+        }
+    }
+    .controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    input, select, button {
+        padding: 12px 15px;
+        font-size: 16px;
+        border: 1px solid #e94560;
+        border-radius: 5px;
+        width: 100%;
+        background-color: #1a1a2e;
+        color: #e94560;
+    }
+    button {
+        background-color: #e94560;
+        color: #1a1a2e;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+    }
+    button:hover {
+        background-color: #ff6b6b;
+        box-shadow: 0 0 15px #e94560;
+    }
+    .image-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-top: 30px;
+    }
+    .image-item {
+        background-color: #16213e;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(233, 69, 96, 0.2);
+        transition: all 0.3s ease;
+    }
+    .image-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(233, 69, 96, 0.3);
+    }
+    .image-item img {
+        width: 100%;
+        height: 300px;
+        object-fit: cover;
+        display: block;
+    }
+    .image-info {
+        padding: 15px;
+        background-color: #0f3460;
+    }
+    .image-info h3 {
+        margin: 0 0 10px 0;
+        color: #e94560;
+        font-family: 'Orbitron', sans-serif;
+    }
+    .image-info p {
+        margin: 0;
+        color: #a9a9a9;
+        font-size: 14px;
+    }
+    .download-btn {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 8px 15px;
+        background-color: #e94560;
+        color: #1a1a2e;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+    .download-btn:hover {
+        background-color: #ff6b6b;
+        box-shadow: 0 0 10px #e94560;
+    }
+    .loading {
+        display: none;
+        text-align: center;
+        margin: 20px 0;
+        color: #e94560;
+        font-family: 'Orbitron', sans-serif;
+    }
+    .loading::after {
+        content: "Generating images...";
+        display: inline-block;
+        animation: ellipsis 1.5s infinite;
+    }
+    @keyframes ellipsis {
+        0% { content: "Generating images"; }
+        33% { content: "Generating images."; }
+        66% { content: "Generating images.."; }
+        100% { content: "Generating images..."; }
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>ZEN AI Module 4 Week 7</h1>
+    <div class="controls">
+        <input type="text" id="apiKey" placeholder="Enter your OpenAI API Key" required>
+        <input type="text" id="userPrompt" placeholder="Enter your image prompt" required>
+        <select id="styleSelect">
+            <option value="realistic">Realistic</option>
+            <option value="cartoon">Cartoon</option>
+            <option value="watercolor">Watercolor</option>
+            <option value="pixel_art">Pixel Art</option>
+            <option value="abstract">Abstract</option>
+            <option value="surrealism">Surrealism</option>
+            <option value="pop_art">Pop Art</option>
+            <option value="cyberpunk">Cyberpunk</option>
+            <option value="steampunk">Steampunk</option>
+            <option value="vaporwave">Vaporwave</option>
+        </select>
+        <select id="colorScheme">
+            <option value="vibrant">Vibrant</option>
+            <option value="pastel">Pastel</option>
+            <option value="monochrome">Monochrome</option>
+            <option value="neon">Neon</option>
+            <option value="earthy">Earthy</option>
+        </select>
+        <select id="mood">
+            <option value="happy">Happy</option>
+            <option value="mysterious">Mysterious</option>
+            <option value="calm">Calm</option>
+            <option value="energetic">Energetic</option>
+            <option value="melancholic">Melancholic</option>
+        </select>
+        <button id="generateBtn">Generate Images</button>
+    </div>
+    <div class="loading" id="loadingIndicator"></div>
+    <div class="image-grid" id="imageGrid"></div>
+</div>
+
+<script>
+    const apiKeyInput = document.getElementById('apiKey');
+    const userPromptInput = document.getElementById('userPrompt');
+    const styleSelect = document.getElementById('styleSelect');
+    const colorSchemeSelect = document.getElementById('colorScheme');
+    const moodSelect = document.getElementById('mood');
+    const generateBtn = document.getElementById('generateBtn');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const imageGrid = document.getElementById('imageGrid');
+
+    const styles = [
+        "realistic", "cartoon", "watercolor", "pixel_art", 
+        "abstract", "surrealism", "pop_art", "cyberpunk",
+        "steampunk", "vaporwave"
+    ];
+
+    const styleDescriptors = {
+        "realistic": "photorealistic, highly detailed",
+        "cartoon": "colorful cartoon style, exaggerated features",
+        "watercolor": "soft watercolor painting, delicate brush strokes",
+        "pixel_art": "retro pixel art style, 8-bit graphics",
+        "abstract": "abstract art, non-representational forms and colors",
+        "surrealism": "dreamlike surrealist art, impossible scenes",
+        "pop_art": "bold pop art style, vibrant colors and patterns",
+        "cyberpunk": "futuristic cyberpunk aesthetic, neon lights, high-tech",
+        "steampunk": "Victorian-era steampunk, brass gears, steam-powered machinery",
+        "vaporwave": "1980s-inspired vaporwave aesthetic, pastel colors, retro elements"
+    };
+
+    const colorSchemes = {
+        "vibrant": "bold and vibrant color palette",
+        "pastel": "soft and muted pastel colors",
+        "monochrome": "single color in various shades and tones",
+        "neon": "bright neon colors, glowing effect",
+        "earthy": "natural earth tones, warm and organic colors"
+    };
+
+    const moods = {
+        "happy": "joyful and uplifting atmosphere",
+        "mysterious": "enigmatic and intriguing ambiance",
+        "calm": "serene and peaceful environment",
+        "energetic": "dynamic and lively composition",
+        "melancholic": "thoughtful and slightly sad mood"
+    };
+
+    function getRandomPromptVariation(basePrompt, style, colorScheme, mood) {
+        const variations = [
+            `Imagine ${basePrompt} in a ${style} style with ${colorScheme} colors and a ${mood} mood`,
+            `Create an image of ${basePrompt} with a ${style} aesthetic, using a ${colorScheme} palette to evoke a ${mood} feeling`,
+            `Visualize ${basePrompt} as if it were a ${style} masterpiece, incorporating ${colorScheme} hues and a ${mood} atmosphere`,
+            `Render ${basePrompt} in the manner of ${style} art, emphasizing ${colorScheme} tones and a ${mood} ambiance`,
+            `Depict ${basePrompt} using ${style} techniques, ${colorScheme} color scheme, and conveying a ${mood} emotion`
+        ];
+        return variations[Math.floor(Math.random() * variations.length)];
+    }
+
+    async function generateImage(apiKey, prompt, style, colorScheme, mood) {
+        const response = await fetch('https://api.openai.com/v1/images/generations', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+                model: "dall-e-3",
+                prompt: `${prompt}. Style: ${styleDescriptors[style]}. Color scheme: ${colorSchemes[colorScheme]}. Mood: ${moods[mood]}.`,
+                n: 1,
+                size: "1024x1024"
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.data[0].url;
+    }
+
+    function displayImage(imageUrl, prompt, style, colorScheme, mood) {
+        const imageItem = document.createElement('div');
+        imageItem.className = 'image-item';
+        imageItem.innerHTML = `
+            <img src="${imageUrl}" alt="Generated ${style} image with ${colorScheme} colors and ${mood} mood">
+            <div class="image-info">
+                <h3>${style.charAt(0).toUpperCase() + style.slice(1)} Style</h3>
+                <p>${prompt}</p>
+                <p>Color Scheme: ${colorScheme}, Mood: ${mood}</p>
+                <a href="${imageUrl}" download="generated_${style}_${colorScheme}_${mood}_image.jpg" class="download-btn">Download</a>
+            </div>
+        `;
+        imageGrid.appendChild(imageItem);
+    }
+
+    generateBtn.addEventListener('click', async () => {
+        const apiKey = apiKeyInput.value.trim();
+        const basePrompt = userPromptInput.value.trim();
+        const selectedStyle = styleSelect.value;
+        const selectedColorScheme = colorSchemeSelect.value;
+        const selectedMood = moodSelect.value;
+
+        if (!apiKey || !basePrompt) {
+            alert('Please enter both API Key and Prompt');
+            return;
+        }
+
+        loadingIndicator.style.display = 'block';
+        imageGrid.innerHTML = '';
+
+        const imagesToGenerate = [selectedStyle, ...styles.filter(s => s !== selectedStyle).sort(() => 0.5 - Math.random()).slice(0, 3)];
+
+        try {
+            for (const style of imagesToGenerate) {
+                const prompt = getRandomPromptVariation(basePrompt, style, selectedColorScheme, selectedMood);
+                const imageUrl = await generateImage(apiKey, prompt, style, selectedColorScheme, selectedMood);
+                displayImage(imageUrl, prompt, style, selectedColorScheme, selectedMood);
+            }
+        } catch (error) {
+            console.error('Error generating images:', error);
+            alert('Error generating images. Please check your API key and try again.');
+        } finally {
+            loadingIndicator.style.display = 'none';
+        }
+    });
+</script>
+</body></html>
