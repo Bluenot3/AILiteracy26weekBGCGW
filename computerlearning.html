@@ -1,0 +1,513 @@
+<html><head><base href="https://ai-ml-3d-playground.example.com/" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D AI & ML Interactive Simulations</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+  }
+  #container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+  }
+  #menu {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+  }
+  button {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin: 5px;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  button:hover {
+    background: #45a049;
+  }
+  #info {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    max-width: 300px;
+  }
+</style>
+</head>
+<body>
+<div id="container">
+  <div id="menu">
+    <button onclick="loadSimulation('neural-network')">Neural Network</button>
+    <button onclick="loadSimulation('decision-tree')">Decision Tree</button>
+    <button onclick="loadSimulation('clustering')">Clustering</button>
+    <button onclick="loadSimulation('reinforcement')">Reinforcement Learning</button>
+    <button onclick="loadSimulation('gan')">GAN</button>
+  </div>
+  <div id="info"></div>
+</div>
+
+<script>
+let scene, camera, renderer, controls, gui;
+let currentSimulation = null;
+
+function init() {
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  renderer = new THREE.WebGLRenderer();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.getElementById('container').appendChild(renderer.domElement);
+
+  camera.position.z = 5;
+
+  gui = new dat.GUI();
+
+  window.addEventListener('resize', onWindowResize, false);
+}
+
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  if (currentSimulation && currentSimulation.update) {
+    currentSimulation.update();
+  }
+  renderer.render(scene, camera);
+}
+
+function loadSimulation(type) {
+  // Clear previous simulation
+  while(scene.children.length > 0){ 
+    scene.remove(scene.children[0]); 
+  }
+  if (currentSimulation && currentSimulation.dispose) {
+    currentSimulation.dispose();
+  }
+  gui.destroy();
+  gui = new dat.GUI();
+
+  switch(type) {
+    case 'neural-network':
+      currentSimulation = createNeuralNetworkSimulation();
+      break;
+    case 'decision-tree':
+      currentSimulation = createDecisionTreeSimulation();
+      break;
+    case 'clustering':
+      currentSimulation = createClusteringSimulation();
+      break;
+    case 'reinforcement':
+      currentSimulation = createReinforcementLearningSimulation();
+      break;
+    case 'gan':
+      currentSimulation = createGANSimulation();
+      break;
+  }
+
+  updateInfo(type);
+}
+
+function updateInfo(type) {
+  const infoText = {
+    'neural-network': 'Neural Network: Adjust layers and neurons to see how the network learns patterns.',
+    'decision-tree': 'Decision Tree: Modify decision nodes to classify data points.',
+    'clustering': 'Clustering: Group similar data points and observe how centroids adjust.',
+    'reinforcement': 'Reinforcement Learning: Guide the agent through the environment to maximize rewards.',
+    'gan': 'GAN: Adjust generator and discriminator to create and evaluate artificial data.'
+  };
+  document.getElementById('info').innerText = infoText[type];
+}
+
+function createNeuralNetworkSimulation() {
+  const neuralNet = new THREE.Group();
+  const layers = 3;
+  const neuronsPerLayer = 4;
+  const neuronGeometry = new THREE.SphereGeometry(0.1, 32, 32);
+  const neuronMaterial = new THREE.MeshPhongMaterial({color: 0x00ff00});
+  const connections = [];
+
+  for (let i = 0; i < layers; i++) {
+    for (let j = 0; j < neuronsPerLayer; j++) {
+      const neuron = new THREE.Mesh(neuronGeometry, neuronMaterial);
+      neuron.position.set(i - 1, j * 0.5 - 0.75, 0);
+      neuralNet.add(neuron);
+
+      if (i > 0) {
+        for (let k = 0; k < neuronsPerLayer; k++) {
+          const connection = new THREE.Line(
+            new THREE.BufferGeometry().setFromPoints([
+              new THREE.Vector3(i - 2, k * 0.5 - 0.75, 0),
+              neuron.position
+            ]),
+            new THREE.LineBasicMaterial({color: 0xffffff, transparent: true, opacity: 0.5})
+          );
+          connections.push(connection);
+          neuralNet.add(connection);
+        }
+      }
+    }
+  }
+
+  scene.add(neuralNet);
+
+  // Add lights
+  const ambientLight = new THREE.AmbientLight(0x404040);
+  scene.add(ambientLight);
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+  directionalLight.position.set(1, 1, 1);
+  scene.add(directionalLight);
+
+  // GUI controls
+  const params = {
+    learningRate: 0.1,
+    activation: 'ReLU'
+  };
+  gui.add(params, 'learningRate', 0.01, 1).name('Learning Rate');
+  gui.add(params, 'activation', ['ReLU', 'Sigmoid', 'Tanh']).name('Activation');
+
+  return {
+    update: () => {
+      neuralNet.rotation.y += 0.005;
+      connections.forEach(connection => {
+        connection.material.opacity = THREE.MathUtils.lerp(0.1, 1, Math.random());
+      });
+    },
+    dispose: () => {
+      neuralNet.traverse(obj => {
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) obj.material.dispose();
+      });
+    }
+  };
+}
+
+function createDecisionTreeSimulation() {
+  const decisionTree = new THREE.Group();
+  const nodeGeometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
+  const nodeMaterial = new THREE.MeshPhongMaterial({color: 0x00ff00});
+  const leafMaterial = new THREE.MeshPhongMaterial({color: 0xff0000});
+
+  function createNode(depth, x, y, isLeaf = false) {
+    const node = new THREE.Mesh(nodeGeometry, isLeaf ? leafMaterial : nodeMaterial);
+    node.position.set(x, y, 0);
+    decisionTree.add(node);
+
+    if (!isLeaf && depth > 0) {
+      const leftBranch = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(x, y, 0),
+          new THREE.Vector3(x - 0.5, y - 0.5, 0)
+        ]),
+        new THREE.LineBasicMaterial({color: 0xffffff})
+      );
+      decisionTree.add(leftBranch);
+      createNode(depth - 1, x - 0.5, y - 0.5, depth === 1);
+
+      const rightBranch = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(x, y, 0),
+          new THREE.Vector3(x + 0.5, y - 0.5, 0)
+        ]),
+        new THREE.LineBasicMaterial({color: 0xffffff})
+      );
+      decisionTree.add(rightBranch);
+      createNode(depth - 1, x + 0.5, y - 0.5, depth === 1);
+    }
+  }
+
+  createNode(3, 0, 1.5);
+  scene.add(decisionTree);
+
+  // Add lights
+  const ambientLight = new THREE.AmbientLight(0x404040);
+  scene.add(ambientLight);
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+  directionalLight.position.set(1, 1, 1);
+  scene.add(directionalLight);
+
+  // GUI controls
+  const params = {
+    splitCriterion: 'Gini',
+    maxDepth: 3
+  };
+  gui.add(params, 'splitCriterion', ['Gini', 'Entropy']).name('Split Criterion');
+  gui.add(params, 'maxDepth', 1, 5).step(1).name('Max Depth');
+
+  return {
+    update: () => {
+      decisionTree.rotation.y += 0.005;
+    },
+    dispose: () => {
+      decisionTree.traverse(obj => {
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) obj.material.dispose();
+      });
+    }
+  };
+}
+
+function createClusteringSimulation() {
+  const clustering = new THREE.Group();
+  const pointGeometry = new THREE.SphereGeometry(0.05, 32, 32);
+  const centroidGeometry = new THREE.SphereGeometry(0.1, 32, 32);
+  const pointMaterials = [
+    new THREE.MeshPhongMaterial({color: 0xff0000}),
+    new THREE.MeshPhongMaterial({color: 0x00ff00}),
+    new THREE.MeshPhongMaterial({color: 0x0000ff})
+  ];
+  const centroidMaterial = new THREE.MeshPhongMaterial({color: 0xffff00});
+
+  const points = [];
+  const centroids = [];
+
+  for (let i = 0; i < 100; i++) {
+    const point = new THREE.Mesh(pointGeometry, pointMaterials[Math.floor(Math.random() * 3)]);
+    point.position.set(
+      Math.random() * 4 - 2,
+      Math.random() * 4 - 2,
+      Math.random() * 4 - 2
+    );
+    points.push(point);
+    clustering.add(point);
+  }
+
+  for (let i = 0; i < 3; i++) {
+    const centroid = new THREE.Mesh(centroidGeometry, centroidMaterial);
+    centroid.position.set(
+      Math.random() * 4 - 2,
+      Math.random() * 4 - 2,
+      Math.random() * 4 - 2
+    );
+    centroids.push(centroid);
+    clustering.add(centroid);
+  }
+
+  scene.add(clustering);
+
+  // Add lights
+  const ambientLight = new THREE.AmbientLight(0x404040);
+  scene.add(ambientLight);
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+  directionalLight.position.set(1, 1, 1);
+  scene.add(directionalLight);
+
+  // GUI controls
+  const params = {
+    algorithm: 'K-Means',
+    clusters: 3
+  };
+  gui.add(params, 'algorithm', ['K-Means', 'DBSCAN', 'Hierarchical']).name('Algorithm');
+  gui.add(params, 'clusters', 2, 5).step(1).name('Number of Clusters');
+
+  return {
+    update: () => {
+      clustering.rotation.y += 0.005;
+      centroids.forEach(centroid => {
+        centroid.position.x += (Math.random() - 0.5) * 0.01;
+        centroid.position.y += (Math.random() - 0.5) * 0.01;
+        centroid.position.z += (Math.random() - 0.5) * 0.01;
+      });
+    },
+    dispose: () => {
+      clustering.traverse(obj => {
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) obj.material.dispose();
+      });
+    }
+  };
+}
+
+function createReinforcementLearningSimulation() {
+  const rlEnvironment = new THREE.Group();
+  const gridSize = 10;
+  const cellSize = 0.5;
+
+  // Create grid
+  for (let i = 0; i <= gridSize; i++) {
+    const lineMaterial = new THREE.LineBasicMaterial({color: 0xffffff, transparent: true, opacity: 0.3});
+    const horizontalLine = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-gridSize * cellSize / 2, i * cellSize - gridSize * cellSize / 2, 0),
+        new THREE.Vector3(gridSize * cellSize / 2, i * cellSize - gridSize * cellSize / 2, 0)
+      ]),
+      lineMaterial
+    );
+    rlEnvironment.add(horizontalLine);
+
+    const verticalLine = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(i * cellSize - gridSize * cellSize / 2, -gridSize * cellSize / 2, 0),
+        new THREE.Vector3(i * cellSize - gridSize * cellSize / 2, gridSize * cellSize / 2, 0)
+      ]),
+      lineMaterial
+    );
+    rlEnvironment.add(verticalLine);
+  }
+
+  // Create agent
+  const agentGeometry = new THREE.SphereGeometry(cellSize / 3, 32, 32);
+  const agentMaterial = new THREE.MeshPhongMaterial({color: 0x00ff00});
+  const agent = new THREE.Mesh(agentGeometry, agentMaterial);
+  agent.position.set(0, 0, cellSize / 3);
+  rlEnvironment.add(agent);
+
+  // Create goal
+  const goalGeometry = new THREE.BoxGeometry(cellSize, cellSize, cellSize);
+  const goalMaterial = new THREE.MeshPhongMaterial({color: 0xffff00});
+  const goal = new THREE.Mesh(goalGeometry, goalMaterial);
+  goal.position.set(
+    (Math.floor(Math.random() * gridSize) - gridSize / 2 + 0.5) * cellSize,
+    (Math.floor(Math.random() * gridSize) - gridSize / 2 + 0.5) * cellSize,
+    cellSize / 2
+  );
+  rlEnvironment.add(goal);
+
+  scene.add(rlEnvironment);
+
+  // Add lights
+  const ambientLight = new THREE.AmbientLight(0x404040);
+  scene.add(ambientLight);
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+  directionalLight.position.set(1, 1, 1);
+  scene.add(directionalLight);
+
+  // GUI controls
+  const params = {
+    algorithm: 'Q-Learning',
+    learningRate: 0.1,
+    discountFactor: 0.9
+  };
+  gui.add(params, 'algorithm', ['Q-Learning', 'SARSA', 'DQN']).name('Algorithm');
+  gui.add(params, 'learningRate', 0.01, 1).name('Learning Rate');
+  gui.add(params, 'discountFactor', 0.1, 1).name('Discount Factor');
+
+  return {
+    update: () => {
+      rlEnvironment.rotation.x = Math.PI / 4;
+      rlEnvironment.rotation.y += 0.005;
+
+      // Simple agent movement (random walk)
+      const directions = [
+        new THREE.Vector3(cellSize, 0, 0),
+        new THREE.Vector3(-cellSize, 0, 0),
+        new THREE.Vector3(0, cellSize, 0),
+        new THREE.Vector3(0, -cellSize, 0)
+      ];
+      const randomDirection = directions[Math.floor(Math.random() * directions.length)];
+      agent.position.add(randomDirection);
+
+      // Keep agent within grid
+      agent.position.x = Math.max(Math.min(agent.position.x, gridSize * cellSize / 2 - cellSize / 2), -gridSize * cellSize / 2 + cellSize / 2);
+      agent.position.y = Math.max(Math.min(agent.position.y, gridSize * cellSize / 2 - cellSize / 2), -gridSize * cellSize / 2 + cellSize / 2);
+
+      // Check if agent reached goal
+      if (agent.position.distanceTo(goal.position) < cellSize) {
+        goal.position.set(
+          (Math.floor(Math.random() * gridSize) - gridSize / 2 + 0.5) * cellSize,
+          (Math.floor(Math.random() * gridSize) - gridSize / 2 + 0.5) * cellSize,
+          cellSize / 2
+        );
+      }
+    },
+    dispose: () => {
+      rlEnvironment.traverse(obj => {
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) obj.material.dispose();
+      });
+    }
+  };
+}
+
+function createGANSimulation() {
+  const ganSimulation = new THREE.Group();
+  const canvasSize = 512;
+  const textureLoader = new THREE.TextureLoader();
+
+  // Create a canvas for the GAN output
+  const canvas = document.createElement('canvas');
+  canvas.width = canvasSize;
+  canvas.height = canvasSize;
+  const ctx = canvas.getContext('2d');
+
+  // Create a plane to display the GAN output
+  const planeGeometry = new THREE.PlaneGeometry(4, 4);
+  const planeMaterial = new THREE.MeshBasicMaterial({map: new THREE.CanvasTexture(canvas)});
+  const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+  ganSimulation.add(plane);
+
+  scene.add(ganSimulation);
+
+  // GUI controls
+  const params = {
+    noiseVector: 100,
+    epochs: 1000,
+    generateNew: () => {
+      generateGANOutput();
+    }
+  };
+  gui.add(params, 'noiseVector', 10, 1000).step(10).name('Noise Vector Size');
+  gui.add(params, 'epochs', 100, 10000).step(100).name('Training Epochs');
+  gui.add(params, 'generateNew').name('Generate New Output');
+
+  function generateGANOutput() {
+    // Simulate GAN output generation
+    ctx.fillStyle = `hsl(${Math.random() * 360}, 100%, 50%)`;
+    ctx.fillRect(0, 0, canvasSize, canvasSize);
+
+    for (let i = 0; i < 50; i++) {
+      ctx.beginPath();
+      ctx.arc(
+        Math.random() * canvasSize,
+        Math.random() * canvasSize,
+        Math.random() * 50 + 10,
+        0,
+        Math.PI * 2
+      );
+      ctx.fillStyle = `hsla(${Math.random() * 360}, 100%, 50%, 0.5)`;
+      ctx.fill();
+    }
+
+    plane.material.map.needsUpdate = true;
+  }
+
+  generateGANOutput();
+
+  return {
+    update: () => {
+      ganSimulation.rotation.y += 0.005;
+    },
+    dispose: () => {
+      ganSimulation.traverse(obj => {
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) {
+          if (obj.material.map) obj.material.map.dispose();
+          obj.material.dispose();
+        }
+      });
+    }
+  };
+}
+
+init();
+loadSimulation('neural-network');
+animate();
+</script>
+</body>
+</html>
