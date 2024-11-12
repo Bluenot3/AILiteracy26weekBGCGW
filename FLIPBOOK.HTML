@@ -1,0 +1,428 @@
+<html><head><base href="." />
+<meta charset="UTF-8" />
+<title>DALL·E 3 Flipbook Generator</title>
+<script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<style>
+:root {
+  --neon-blue: #00f3ff;
+  --neon-purple: #9d00ff;
+  --dark-bg: #0a0a0f;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+body {
+  background: var(--dark-bg);
+  color: white;
+  overflow: hidden;
+}
+
+#canvas-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+}
+
+.ui-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) minmax(300px, 1fr);
+  gap: 2rem;
+  padding: 2rem;
+}
+
+.control-panel {
+  width: 100%;
+  max-width: 100%;
+  height: calc(100vh - 4rem);
+  overflow-y: auto;
+}
+
+.flipbook-display {
+  background: rgba(10, 10, 15, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 2rem;
+  border: 1px solid var(--neon-purple);
+  box-shadow: 0 0 20px rgba(157, 0, 255, 0.2);
+  height: calc(100vh - 4rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.flipbook-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 2000px;
+}
+
+.frame {
+  width: 80%;
+  height: 80%;
+  max-width: 600px;
+  max-height: 600px;
+  position: absolute;
+  transform-style: preserve-3d;
+  transition: transform 0.5s ease;
+}
+
+.frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 15px;
+  border: 2px solid var(--neon-purple);
+  box-shadow: 0 0 20px rgba(157, 0, 255, 0.2);
+}
+
+.input-group {
+  margin-bottom: 1.5rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--neon-blue);
+  font-weight: bold;
+}
+
+textarea {
+  width: 100%;
+  height: 100px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--neon-purple);
+  border-radius: 10px;
+  color: white;
+  padding: 1rem;
+  resize: none;
+  font-size: 1rem;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.control-slider {
+  width: 100%;
+  -webkit-appearance: none;
+  height: 4px;
+  background: var(--neon-purple);
+  border-radius: 2px;
+}
+
+.control-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  background: var(--neon-blue);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.control-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 10px var(--neon-blue);
+}
+
+.generate-btn {
+  background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple));
+  border: none;
+  border-radius: 10px;
+  color: white;
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.generate-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(157, 0, 255, 0.4);
+}
+
+.api-input, .quality-select, .style-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--neon-purple);
+  border-radius: 10px;
+  color: white;
+  padding: 0.8rem;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+.status-message {
+  margin-top: 1rem;
+  color: var(--neon-blue);
+  text-align: center;
+  min-height: 1.5em;
+}
+</style>
+</head>
+<body>
+<div id="canvas-container"></div>
+
+<div class="ui-container">
+  <div class="control-panel">
+    <div class="input-group">
+      <label>OpenAI API Key</label>
+      <input type="password" id="api-key" placeholder="sk-..." class="api-input" />
+    </div>
+    
+    <div class="input-group">
+      <label>Scene Description</label>
+      <textarea id="scene-description" placeholder="Describe your animation sequence..."></textarea>
+    </div>
+    
+    <div class="controls">
+      <div class="input-group">
+        <label>Number of Frames</label>
+        <input type="range" class="control-slider" id="frame-count" min="5" max="24" value="12">
+        <span id="frame-count-value">12 frames</span>
+      </div>
+      
+      <div class="input-group">
+        <label>Animation Speed</label>
+        <input type="range" class="control-slider" id="animation-speed" min="1" max="10" value="5">
+        <span id="speed-value">5x</span>
+      </div>
+      
+      <div class="input-group">
+        <label>Style Consistency</label>
+        <input type="range" class="control-slider" id="style-consistency" min="1" max="10" value="8">
+        <span id="consistency-value">8</span>
+      </div>
+      
+      <div class="input-group">
+        <label>Image Quality</label>
+        <select id="image-quality" class="quality-select">
+          <option value="standard">Standard (1024x1024)</option>
+          <option value="hd">HD (1024x1792)</option>
+        </select>
+      </div>
+      
+      <div class="input-group">
+        <label>Style Prompt Suffix</label>
+        <input type="text" id="style-suffix" placeholder="e.g., cinematic lighting, detailed" class="style-input" value="high quality, detailed, cinematic lighting"/>
+      </div>
+    </div>
+    
+    <button class="generate-btn" id="generate-btn">Generate Flipbook Animation</button>
+    <div id="status" class="status-message"></div>
+  </div>
+  
+  <div class="flipbook-display">
+    <div class="flipbook-container" id="flipbook-container"></div>
+  </div>
+</div>
+
+<script>
+// Three.js Setup
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+// Background particles
+const particlesGeometry = new THREE.BufferGeometry();
+const particlesCount = 2000;
+const posArray = new Float32Array(particlesCount * 3);
+
+for(let i = 0; i < particlesCount * 3; i++) {
+    posArray[i] = (Math.random() - 0.5) * 5;
+}
+
+particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+const particlesMaterial = new THREE.PointsMaterial({
+    size: 0.005,
+    color: '#00f3ff',
+    blending: THREE.AdditiveBlending
+});
+
+const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+scene.add(particlesMesh);
+
+camera.position.z = 3;
+
+// Animation
+let mouseX = 0;
+let mouseY = 0;
+
+document.addEventListener('mousemove', (event) => {
+    mouseX = event.clientX / window.innerWidth - 0.5;
+    mouseY = event.clientY / window.innerHeight - 0.5;
+});
+
+function animate() {
+    requestAnimationFrame(animate);
+    
+    particlesMesh.rotation.y += 0.001;
+    particlesMesh.rotation.x += 0.001;
+    
+    particlesMesh.rotation.y += mouseX * 0.05;
+    particlesMesh.rotation.x += mouseY * 0.05;
+    
+    renderer.render(scene, camera);
+}
+
+animate();
+
+// UI Controls
+const frameCountSlider = document.getElementById('frame-count');
+const frameCountValue = document.getElementById('frame-count-value');
+const speedSlider = document.getElementById('animation-speed');
+const speedValue = document.getElementById('speed-value');
+const consistencySlider = document.getElementById('style-consistency');
+const consistencyValue = document.getElementById('consistency-value');
+const generateBtn = document.getElementById('generate-btn');
+
+frameCountSlider.addEventListener('input', () => {
+    frameCountValue.textContent = `${frameCountSlider.value} frames`;
+});
+
+speedSlider.addEventListener('input', () => {
+    speedValue.textContent = `${speedSlider.value}x`;
+});
+
+consistencySlider.addEventListener('input', () => {
+    consistencyValue.textContent = consistencySlider.value;
+});
+
+// DALL-E API Call
+async function generateDalleImage(apiKey, prompt, quality) {
+    const response = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+            model: "dall-e-3",
+            prompt: prompt,
+            n: 1,
+            size: quality === 'hd' ? "1024x1792" : "1024x1024",
+            quality: "standard"
+        })
+    });
+
+    if (!response.ok) {
+        throw new Error(`API Error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.data[0].url;
+}
+
+async function generateKeyframes(description, frameCount, apiKey) {
+    const status = document.getElementById('status');
+    const styleSuffix = document.getElementById('style-suffix').value;
+    const quality = document.getElementById('image-quality').value;
+    const flipbookContainer = document.getElementById('flipbook-container');
+    flipbookContainer.innerHTML = '';
+    
+    const keyframes = [];
+    const keyframeIndices = [0, Math.floor(frameCount/2), frameCount-1];
+    
+    for (let i of keyframeIndices) {
+        status.textContent = `Generating keyframe ${keyframes.length + 1} of 3...`;
+        const frameDescription = `Frame ${i+1} of ${frameCount}: ${description}. ${styleSuffix}`;
+        
+        try {
+            const imageUrl = await generateDalleImage(apiKey, frameDescription, quality);
+            keyframes.push(imageUrl);
+            
+            // Create and display frame
+            const frame = document.createElement('div');
+            frame.className = 'frame';
+            frame.innerHTML = `
+              <img 
+                src="${imageUrl}" 
+                alt="Generated frame ${i+1}"
+                loading="lazy"
+                onload="this.style.opacity=1"
+              />`;
+            frame.style.transform = `translateZ(${-i * 200}px)`;
+            frame.style.opacity = 0;
+            gsap.to(frame, {
+              opacity: 1,
+              duration: 0.5,
+              delay: i * 0.2
+            });
+            flipbookContainer.appendChild(frame);
+        } catch (error) {
+            throw new Error(`Failed to generate frame ${i+1}: ${error.message}`);
+        }
+    }
+    
+    return keyframes;
+}
+
+generateBtn.addEventListener('click', async () => {
+    const description = document.getElementById('scene-description').value;
+    const frameCount = parseInt(frameCountSlider.value);
+    const apiKey = document.getElementById('api-key').value;
+    const status = document.getElementById('status');
+    
+    if (!apiKey) {
+        status.textContent = 'Please enter your OpenAI API key';
+        return;
+    }
+    
+    generateBtn.disabled = true;
+    generateBtn.textContent = 'Generating...';
+    
+    try {
+        const keyframes = await generateKeyframes(description, frameCount, apiKey);
+        status.textContent = 'Generation complete!';
+        
+        // Animate frames
+        gsap.to('.frame', {
+            rotationY: 360,
+            duration: 3,
+            stagger: 0.8,
+            ease: "power2.inOut",
+            repeatDelay: 1,
+            repeat: -1
+        });
+        
+    } catch (error) {
+        status.textContent = `Error: ${error.message}`;
+        console.error('Generation failed:', error);
+    } finally {
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Generate Flipbook Animation';
+    }
+});
+
+// Window resize handling
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body></html>
