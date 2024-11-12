@@ -1,0 +1,324 @@
+<html><head><base href="/">
+<title>AI-Powered Comic Generator</title>
+<style>
+    body {
+        font-family: 'Comic Sans MS', sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f0f0f0;
+    }
+
+    .container {
+        background: white;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+
+    .input-group {
+        margin-bottom: 1.5rem;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+    }
+
+    input[type="text"], 
+    textarea, 
+    select {
+        width: 100%;
+        padding: 0.5rem;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        margin-bottom: 1rem;
+    }
+
+    button {
+        background: #4CAF50;
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1.1rem;
+        transition: background 0.3s;
+    }
+
+    button:hover {
+        background: #45a049;
+    }
+
+    #comic-output {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .comic-panel {
+        border: 3px solid #333;
+        padding: 10px;
+        background: white;
+        position: relative;
+    }
+
+    .comic-panel img {
+        width: 100%;
+        height: auto;
+        object-fit: cover;
+    }
+
+    .speech-bubble {
+        background: white;
+        border: 2px solid black;
+        border-radius: 15px;
+        padding: 10px;
+        margin: 10px;
+        position: absolute;
+        max-width: 80%;
+    }
+
+    .loading {
+        display: none;
+        text-align: center;
+        margin: 2rem;
+    }
+
+    .loading-spinner {
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid #3498db;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI Comic Generator</h1>
+        
+        <div class="input-group">
+            <label for="openai-key">OpenAI API Key:</label>
+            <input type="password" id="openai-key" placeholder="sk-...">
+            
+            <label for="cohere-key">Cohere API Key:</label>
+            <input type="password" id="cohere-key" placeholder="Enter your Cohere API key">
+        </div>
+
+        <div class="input-group">
+            <label for="story-prompt">Story Prompt:</label>
+            <textarea id="story-prompt" rows="4" placeholder="Enter your comic story idea..."></textarea>
+        </div>
+
+        <div class="input-group">
+            <label for="panels">Number of Panels:</label>
+            <select id="panels">
+                <option value="3">3 Panels</option>
+                <option value="4">4 Panels</option>
+                <option value="6">6 Panels</option>
+                <option value="9">9 Panels</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label for="style">Art Style:</label>
+            <select id="style">
+                <option value="manga">Manga</option>
+                <option value="western">Western Comic</option>
+                <option value="pixel">Pixel Art</option>
+                <option value="watercolor">Watercolor</option>
+                <option value="noir">Film Noir</option>
+            </select>
+        </div>
+
+        <button onclick="generateComic()">Generate Comic</button>
+
+        <div class="loading">
+            <div class="loading-spinner"></div>
+            <p>Generating your comic... This may take a few moments.</p>
+        </div>
+
+        <div id="comic-output"></div>
+    </div>
+
+<script>
+async function generateComic() {
+    const openaiKey = document.getElementById('openai-key').value;
+    const cohereKey = document.getElementById('cohere-key').value;
+    const storyPrompt = document.getElementById('story-prompt').value;
+    const panels = parseInt(document.getElementById('panels').value);
+    const style = document.getElementById('style').value;
+
+    if (!openaiKey || !storyPrompt) {
+        alert('Please fill in all required fields!');
+        return;
+    }
+
+    document.querySelector('.loading').style.display = 'block';
+    document.getElementById('comic-output').innerHTML = '';
+
+    try {
+        let storyStructure;
+        if (cohereKey) {
+            try {
+                storyStructure = await getStoryStructure(cohereKey, storyPrompt, panels, true);
+            } catch (cohereError) {
+                console.log('Cohere API failed, falling back to OpenAI');
+                storyStructure = await getStoryStructure(openaiKey, storyPrompt, panels, false);
+            }
+        } else {
+            storyStructure = await getStoryStructure(openaiKey, storyPrompt, panels, false);
+        }
+        
+        const comicPanels = await generatePanelImages(openaiKey, storyStructure, style);
+        displayComic(comicPanels);
+    } catch (error) {
+        console.error('Error generating comic:', error);
+        alert('Error generating comic. Please check your API keys and try again.');
+    } finally {
+        document.querySelector('.loading').style.display = 'none';
+    }
+}
+
+async function getStoryStructure(apiKey, prompt, panelCount, isCohere) {
+    if (isCohere) {
+        const coherePrompt = `Create a ${panelCount}-panel comic story structure based on this prompt: "${prompt}". 
+        For each panel, provide: 
+        1. A detailed visual description
+        2. Any dialogue or text
+        Format as JSON array.`;
+
+        const response = await fetch('https://api.cohere.ai/v1/generate', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                model: 'command',
+                prompt: coherePrompt,
+                max_tokens: 500,
+                temperature: 0.7,
+            })
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+
+        try {
+            return JSON.parse(data.generations[0].text);
+        } catch (e) {
+            throw new Error('Failed to parse Cohere response');
+        }
+    } else {
+        const openaiPrompt = `Create a ${panelCount}-panel comic story structure based on this prompt: "${prompt}". 
+        For each panel, provide a detailed visual description and any dialogue or text. 
+        Format the response as a JSON array where each object has 'visualDescription' and 'dialogue' properties.`;
+
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                model: "gpt-4",
+                messages: [{
+                    role: "user",
+                    content: openaiPrompt
+                }],
+                temperature: 0.7
+            })
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+
+        try {
+            return JSON.parse(data.choices[0].message.content);
+        } catch (e) {
+            throw new Error('Failed to parse OpenAI response');
+        }
+    }
+}
+
+async function generatePanelImages(apiKey, storyStructure, style) {
+    const panels = [];
+    
+    for (const panel of storyStructure) {
+        const stylePrompt = getStylePrompt(style);
+        const visualPrompt = `${stylePrompt} ${panel.visualDescription}`;
+        
+        const response = await fetch('https://api.openai.com/v1/images/generations', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                model: "dall-e-3",
+                prompt: visualPrompt,
+                n: 1,
+                size: "1024x1024"
+            })
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+
+        panels.push({
+            image: data.data[0].url,
+            dialogue: panel.dialogue
+        });
+    }
+
+    return panels;
+}
+
+function getStylePrompt(style) {
+    const stylePrompts = {
+        manga: "Create a manga-style illustration with bold lines and dramatic composition,",
+        western: "Create a classic American comic book style illustration with bold colors and dynamic action,",
+        pixel: "Create a pixel art style illustration with clear pixels and limited color palette,",
+        watercolor: "Create a soft watercolor style illustration with gentle colors and flowing lines,",
+        noir: "Create a black and white film noir style illustration with high contrast and dramatic shadows,"
+    };
+    return stylePrompts[style] || stylePrompts.western;
+}
+
+function displayComic(panels) {
+    const output = document.getElementById('comic-output');
+    output.innerHTML = '';
+
+    panels.forEach((panel, index) => {
+        const panelDiv = document.createElement('div');
+        panelDiv.className = 'comic-panel';
+        
+        const img = document.createElement('img');
+        img.src = panel.image;
+        img.alt = `Comic panel ${index + 1}`;
+        
+        panelDiv.appendChild(img);
+
+        if (panel.dialogue) {
+            const bubble = document.createElement('div');
+            bubble.className = 'speech-bubble';
+            bubble.textContent = panel.dialogue;
+            panelDiv.appendChild(bubble);
+        }
+
+        output.appendChild(panelDiv);
+    });
+}
+</script>
+</body></html>
