@@ -1,0 +1,509 @@
+<html><head><base href="/" /><title>ASCII Video Player v2.0</title>
+<style>
+  :root {
+    --primary-color: #33ff33;
+    --bg-color: #000;
+    --accent-color: rgba(51, 255, 51, 0.3);
+    --hover-color: #000;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+  }
+
+  @keyframes glowPulse {
+    0% { box-shadow: 0 0 5px var(--primary-color); }
+    50% { box-shadow: 0 0 20px var(--primary-color); }
+    100% { box-shadow: 0 0 5px var(--primary-color); }
+  }
+
+  @keyframes scanline {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+  }
+
+  @keyframes matrixRain {
+    0% { opacity: 1; transform: translateY(-100%); }
+    100% { opacity: 0; transform: translateY(100%); }
+  }
+
+  body {
+    background: var(--bg-color);
+    color: var(--primary-color);
+    font-family: 'Courier New', monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      transparent 0%,
+      rgba(32, 128, 32, 0.2) 2%,
+      transparent 3%
+    );
+    animation: scanline 8s linear infinite;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  #container {
+    background: rgba(0, 0, 0, 0.8);
+    padding: 30px;
+    border-radius: 15px;
+    border: 1px solid var(--primary-color);
+    animation: glowPulse 2s infinite;
+    backdrop-filter: blur(10px);
+    position: relative;
+    max-width: 1200px;
+    width: 95%;
+  }
+
+  h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 2.5em;
+    text-shadow: 0 0 10px var(--primary-color);
+    letter-spacing: 2px;
+  }
+
+  #ascii-player {
+    white-space: pre;
+    line-height: 8px;
+    font-family: monospace;
+    background: rgba(0, 0, 0, 0.9);
+    padding: 20px;
+    border: 2px solid var(--primary-color);
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+    min-height: 400px;
+  }
+
+  .controls {
+    margin: 20px 0;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 20px;
+    border-radius: 10px;
+  }
+
+  button, select {
+    background: rgba(26, 26, 26, 0.8);
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+    padding: 12px 25px;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  button::after, select::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      transparent,
+      rgba(51, 255, 51, 0.1),
+      transparent
+    );
+    transform: rotate(45deg);
+    transition: 0.5s;
+  }
+
+  button:hover::after, select:hover::after {
+    left: 100%;
+  }
+
+  button:hover, select:hover {
+    background: var(--primary-color);
+    color: var(--hover-color);
+    transform: scale(1.05);
+    box-shadow: 0 0 15px var(--primary-color);
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 200px;
+    height: 4px;
+    background: var(--primary-color);
+    border-radius: 2px;
+    outline: none;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 10px var(--primary-color);
+  }
+
+  .settings-group {
+    background: rgba(0, 0, 0, 0.6);
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+    border: 1px solid rgba(51, 255, 51, 0.2);
+  }
+
+  .settings-label {
+    min-width: 150px;
+    font-weight: bold;
+    text-shadow: 0 0 5px var(--primary-color);
+  }
+
+  #status {
+    text-align: center;
+    padding: 15px;
+    margin-top: 20px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.6);
+    text-shadow: 0 0 5px var(--primary-color);
+  }
+
+  /* Theme Classes with Enhanced Effects */
+  .theme-green { --primary-color: #33ff33; }
+  .theme-white { --primary-color: #ffffff; }
+  .theme-blue { --primary-color: #3333ff; }
+  .theme-red { --primary-color: #ff3333; }
+  .theme-yellow { --primary-color: #ffff33; }
+  .theme-cyan { --primary-color: #33ffff; }
+  .theme-magenta { --primary-color: #ff33ff; }
+
+  /* Matrix rain effect */
+  .matrix-rain {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .rain-character {
+    position: absolute;
+    color: var(--primary-color);
+    font-size: 20px;
+    animation: matrixRain 2s linear infinite;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    #container {
+      padding: 15px;
+    }
+    
+    .controls {
+      flex-direction: column;
+    }
+    
+    button, select {
+      width: 100%;
+    }
+    
+    input[type="range"] {
+      width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="matrix-rain"></div>
+
+<div id="container">
+    <h1>ASCII Video Player</h1>
+    <div id="ascii-player"></div>
+    <div class="controls">
+      <label class="upload-btn">
+        Upload Video
+        <input type="file" id="video-input" accept="video/*">
+      </label>
+      <button id="play-btn">Play</button>
+      <button id="pause-btn">Pause</button>
+      <button id="reset-btn">Reset</button>
+    </div>
+    <div class="settings-group">
+      <span class="settings-label">Resolution:</span>
+      <select id="resolution">
+        <option value="60">Low (60x)</option>
+        <option value="100" selected>Medium (100x)</option>
+        <option value="150">High (150x)</option>
+        <option value="200">Ultra (200x)</option>
+      </select>
+    </div>
+    <div class="settings-group">
+      <span class="settings-label">Character Set:</span>
+      <select id="charset">
+        <option value="1">Basic ( .:-=+*#%@)</option>
+        <option value="2">Complex (░▒▓█)</option>
+        <option value="3">Matrix (01)</option>
+      </select>
+    </div>
+    <div class="settings-group">
+      <span class="settings-label">Color Theme:</span>
+      <select id="color-theme">
+        <option value="green">Matrix Green</option>
+        <option value="white">Classic White</option>
+        <option value="blue">Deep Blue</option>
+        <option value="red">Ruby Red</option>
+        <option value="yellow">Amber Yellow</option>
+        <option value="cyan">Cyber Cyan</option>
+        <option value="magenta">Neon Magenta</option>
+      </select>
+    </div>
+    <div class="settings-group">
+      <span class="settings-label">Font Size:</span>
+      <input type="range" id="font-size" min="6" max="16" value="8">
+      <span id="font-size-value">8px</span>
+    </div>
+    <div class="settings-group">
+      <span class="settings-label">Playback Speed:</span>
+      <input type="range" id="playback-speed" min="0.5" max="2" step="0.1" value="1">
+      <span id="speed-value">1x</span>
+    </div>
+    <div id="status">Upload a video to begin...</div>
+  </div>
+
+<script>
+const CHARSET_MAPS = {
+  '1': ' .:-=+*#%@'.split(''),
+  '2': ' ░▒▓█'.split(''),
+  '3': '01'.split('')
+};
+
+const asciiPlayer = document.getElementById('ascii-player');
+const videoInput = document.getElementById('video-input');
+const playBtn = document.getElementById('play-btn');
+const pauseBtn = document.getElementById('pause-btn');
+const resetBtn = document.getElementById('reset-btn');
+const status = document.getElementById('status');
+const resolutionSelect = document.getElementById('resolution');
+const charsetSelect = document.getElementById('charset');
+const colorThemeSelect = document.getElementById('color-theme');
+const fontSizeInput = document.getElementById('font-size');
+const fontSizeValue = document.getElementById('font-size-value');
+const playbackSpeed = document.getElementById('playback-speed');
+const speedValue = document.getElementById('speed-value');
+
+let isPlaying = false;
+let canvas, ctx, video;
+let currentCharset = CHARSET_MAPS['1'];
+
+// Matrix rain effect
+function createMatrixRain() {
+  const matrixRain = document.querySelector('.matrix-rain');
+  const characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  
+  setInterval(() => {
+    const character = document.createElement('span');
+    character.className = 'rain-character';
+    character.textContent = characters[Math.floor(Math.random() * characters.length)];
+    character.style.left = Math.random() * 100 + 'vw';
+    character.style.animationDuration = (Math.random() * 1 + 1) + 's';
+    character.style.opacity = Math.random();
+    
+    matrixRain.appendChild(character);
+    
+    setTimeout(() => {
+      character.remove();
+    }, 3000);
+  }, 50);
+}
+
+function initializeCanvas() {
+  canvas = document.createElement('canvas');
+  ctx = canvas.getContext('2d');
+}
+
+function getAsciiChar(brightness) {
+  const charIndex = Math.floor(brightness / 255 * (currentCharset.length - 1));
+  return currentCharset[charIndex];
+}
+
+function convertToAscii(imageData, width, height) {
+  let asciiStr = '';
+  for (let y = 0; y < height; y += 2) {
+    for (let x = 0; x < width; x++) {
+      const index = (y * width + x) * 4;
+      const brightness = (imageData.data[index] + imageData.data[index + 1] + imageData.data[index + 2]) / 3;
+      asciiStr += getAsciiChar(brightness);
+    }
+    asciiStr += '\n';
+  }
+  return asciiStr;
+}
+
+function processFrame() {
+  if (!isPlaying) return;
+
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const asciiStr = convertToAscii(imageData, canvas.width, canvas.height);
+  asciiPlayer.textContent = asciiStr;
+
+  requestAnimationFrame(processFrame);
+}
+
+function updateResolution() {
+  if (!video) return;
+  const width = parseInt(resolutionSelect.value);
+  canvas.width = width;
+  canvas.height = Math.floor((width * video.videoHeight) / video.videoWidth);
+}
+
+// Theme switching with transition effects
+colorThemeSelect.addEventListener('change', (e) => {
+  const selectedTheme = e.target.value;
+  document.body.className = `theme-${selectedTheme}`;
+  
+  // Add glitch effect on theme change
+  const glitchEffect = () => {
+    asciiPlayer.style.transform = `translate(${Math.random() * 10 - 5}px, ${Math.random() * 10 - 5}px)`;
+    setTimeout(() => {
+      asciiPlayer.style.transform = 'none';
+    }, 50);
+  };
+  
+  for (let i = 0; i < 5; i++) {
+    setTimeout(glitchEffect, i * 100);
+  }
+});
+
+// Event Listeners
+videoInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  video = document.createElement('video');
+  video.src = URL.createObjectURL(file);
+  video.addEventListener('loadedmetadata', () => {
+    updateResolution();
+    status.textContent = 'Video loaded! Press Play to start.';
+  });
+
+  // Audio visualization setup
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  const analyser = audioContext.createAnalyser();
+  const source = audioContext.createMediaElementSource(video);
+  source.connect(analyser);
+  analyser.connect(audioContext.destination);
+  
+  analyser.fftSize = 256;
+  const bufferLength = analyser.frequencyBinCount;
+  const dataArray = new Uint8Array(bufferLength);
+  
+  function visualize() {
+    if (!isPlaying) return;
+    
+    analyser.getByteFrequencyData(dataArray);
+    const average = dataArray.reduce((a, b) => a + b) / bufferLength;
+    
+    const container = document.getElementById('container');
+    container.style.boxShadow = `0 0 ${average/2}px var(--primary-color)`;
+    
+    requestAnimationFrame(visualize);
+  }
+  
+  video.addEventListener('play', visualize);
+});
+
+playBtn.addEventListener('click', () => {
+  if (!video) return;
+  video.play();
+  video.playbackRate = parseFloat(playbackSpeed.value);
+  isPlaying = true;
+  processFrame();
+  status.textContent = 'Playing...';
+});
+
+pauseBtn.addEventListener('click', () => {
+  if (!video) return;
+  video.pause();
+  isPlaying = false;
+  status.textContent = 'Paused';
+});
+
+resetBtn.addEventListener('click', () => {
+  if (!video) return;
+  video.currentTime = 0;
+  if (!isPlaying) {
+    status.textContent = 'Reset to beginning';
+  }
+});
+
+resolutionSelect.addEventListener('change', updateResolution);
+
+charsetSelect.addEventListener('change', (e) => {
+  currentCharset = CHARSET_MAPS[e.target.value];
+});
+
+fontSizeInput.addEventListener('input', (e) => {
+  const size = e.target.value;
+  asciiPlayer.style.fontSize = `${size}px`;
+  asciiPlayer.style.lineHeight = `${size}px`;
+  fontSizeValue.textContent = `${size}px`;
+});
+
+playbackSpeed.addEventListener('input', (e) => {
+  const speed = e.target.value;
+  if (video) {
+    video.playbackRate = speed;
+  }
+  speedValue.textContent = `${speed}x`;
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  switch(e.key) {
+    case ' ':
+      if (isPlaying) pauseBtn.click();
+      else playBtn.click();
+      break;
+    case 'ArrowLeft':
+      if (video) video.currentTime -= 5;
+      break;
+    case 'ArrowRight':
+      if (video) video.currentTime += 5;
+      break;
+    case 'r':
+      resetBtn.click();
+      break;
+  }
+});
+
+// Initialize
+initializeCanvas();
+createMatrixRain();
+</script>
+</body></html>
