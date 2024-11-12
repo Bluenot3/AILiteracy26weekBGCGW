@@ -1,0 +1,318 @@
+<html><head><base href="/" /><title>ASCII Video Player</title>
+<style>
+  body {
+    background: #000;
+    color: #33ff33;  /* Default color - green */
+    font-family: monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+  }
+
+  #container {
+    background: #000;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(51, 255, 51, 0.3);
+  }
+
+  #ascii-player {
+    white-space: pre;
+    line-height: 8px;
+    font-family: monospace;
+    background: #000;
+    padding: 20px;
+  }
+
+  .controls {
+    margin: 20px 0;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  button, select {
+    background: #1a1a1a;
+    color: #33ff33;
+    border: 1px solid #33ff33;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-radius: 5px;
+  }
+
+  button:hover, select:hover {
+    background: #33ff33;
+    color: #000;
+  }
+
+  input[type="file"] {
+    display: none;
+  }
+
+  input[type="range"] {
+    width: 200px;
+    accent-color: #33ff33;
+  }
+
+  .upload-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background: #1a1a1a;
+    color: #33ff33;
+    border: 1px solid #33ff33;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+
+  .upload-btn:hover {
+    background: #33ff33;
+    color: #000;
+  }
+
+  #status {
+    margin: 10px 0;
+    color: #33ff33;
+  }
+
+  .settings-group {
+    margin: 10px 0;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .settings-label {
+    min-width: 120px;
+  }
+
+  .theme-green {
+    color: #33ff33 !important;
+  }
+  
+  .theme-white {
+    color: #ffffff !important;
+  }
+  
+  .theme-blue {
+    color: #3333ff !important;
+  }
+  
+  .theme-red {
+    color: #ff3333 !important;
+  }
+  
+  .theme-yellow {
+    color: #ffff33 !important;
+  }
+  
+  .theme-cyan {
+    color: #33ffff !important;
+  }
+  
+  .theme-magenta {
+    color: #ff33ff !important;
+  }
+</style>
+</head>
+<body>
+  <div id="container">
+    <h1>ASCII Video Player</h1>
+    <div id="ascii-player"></div>
+    <div class="controls">
+      <label class="upload-btn">
+        Upload Video
+        <input type="file" id="video-input" accept="video/*">
+      </label>
+      <button id="play-btn">Play</button>
+      <button id="pause-btn">Pause</button>
+      <button id="reset-btn">Reset</button>
+    </div>
+    <div class="settings-group">
+      <span class="settings-label">Resolution:</span>
+      <select id="resolution">
+        <option value="60">Low (60x)</option>
+        <option value="100" selected>Medium (100x)</option>
+        <option value="150">High (150x)</option>
+        <option value="200">Ultra (200x)</option>
+      </select>
+    </div>
+    <div class="settings-group">
+      <span class="settings-label">Character Set:</span>
+      <select id="charset">
+        <option value="1">Basic ( .:-=+*#%@)</option>
+        <option value="2">Complex (░▒▓█)</option>
+        <option value="3">Matrix (01)</option>
+      </select>
+    </div>
+    <div class="settings-group">
+      <span class="settings-label">Color Theme:</span>
+      <select id="color-theme">
+        <option value="green">Matrix Green</option>
+        <option value="white">Classic White</option>
+        <option value="blue">Deep Blue</option>
+        <option value="red">Ruby Red</option>
+        <option value="yellow">Amber Yellow</option>
+        <option value="cyan">Cyber Cyan</option>
+        <option value="magenta">Neon Magenta</option>
+      </select>
+    </div>
+    <div class="settings-group">
+      <span class="settings-label">Font Size:</span>
+      <input type="range" id="font-size" min="6" max="16" value="8">
+      <span id="font-size-value">8px</span>
+    </div>
+    <div class="settings-group">
+      <span class="settings-label">Playback Speed:</span>
+      <input type="range" id="playback-speed" min="0.5" max="2" step="0.1" value="1">
+      <span id="speed-value">1x</span>
+    </div>
+    <div id="status">Upload a video to begin...</div>
+  </div>
+
+<script>
+const CHARSET_MAPS = {
+  '1': ' .:-=+*#%@'.split(''),
+  '2': ' ░▒▓█'.split(''),
+  '3': '01'.split('')
+};
+
+const asciiPlayer = document.getElementById('ascii-player');
+const videoInput = document.getElementById('video-input');
+const playBtn = document.getElementById('play-btn');
+const pauseBtn = document.getElementById('pause-btn');
+const resetBtn = document.getElementById('reset-btn');
+const status = document.getElementById('status');
+const resolutionSelect = document.getElementById('resolution');
+const charsetSelect = document.getElementById('charset');
+const colorThemeSelect = document.getElementById('color-theme');
+const fontSizeInput = document.getElementById('font-size');
+const fontSizeValue = document.getElementById('font-size-value');
+const playbackSpeed = document.getElementById('playback-speed');
+const speedValue = document.getElementById('speed-value');
+
+let isPlaying = false;
+let canvas, ctx, video;
+let currentCharset = CHARSET_MAPS['1'];
+
+function initializeCanvas() {
+  canvas = document.createElement('canvas');
+  ctx = canvas.getContext('2d');
+}
+
+function getAsciiChar(brightness) {
+  const charIndex = Math.floor(brightness / 255 * (currentCharset.length - 1));
+  return currentCharset[charIndex];
+}
+
+function convertToAscii(imageData, width, height) {
+  let asciiStr = '';
+  for (let y = 0; y < height; y += 2) {
+    for (let x = 0; x < width; x++) {
+      const index = (y * width + x) * 4;
+      const brightness = (imageData.data[index] + imageData.data[index + 1] + imageData.data[index + 2]) / 3;
+      asciiStr += getAsciiChar(brightness);
+    }
+    asciiStr += '\n';
+  }
+  return asciiStr;
+}
+
+function processFrame() {
+  if (!isPlaying) return;
+
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const asciiStr = convertToAscii(imageData, canvas.width, canvas.height);
+  asciiPlayer.textContent = asciiStr;
+
+  requestAnimationFrame(processFrame);
+}
+
+function updateResolution() {
+  if (!video) return;
+  const width = parseInt(resolutionSelect.value);
+  canvas.width = width;
+  canvas.height = Math.floor((width * video.videoHeight) / video.videoWidth);
+}
+
+videoInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  video = document.createElement('video');
+  video.src = URL.createObjectURL(file);
+  video.addEventListener('loadedmetadata', () => {
+    updateResolution();
+    status.textContent = 'Video loaded! Press Play to start.';
+  });
+});
+
+playBtn.addEventListener('click', () => {
+  if (!video) return;
+  video.play();
+  video.playbackRate = parseFloat(playbackSpeed.value);
+  isPlaying = true;
+  processFrame();
+  status.textContent = 'Playing...';
+});
+
+pauseBtn.addEventListener('click', () => {
+  if (!video) return;
+  video.pause();
+  isPlaying = false;
+  status.textContent = 'Paused';
+});
+
+resetBtn.addEventListener('click', () => {
+  if (!video) return;
+  video.currentTime = 0;
+  if (!isPlaying) {
+    status.textContent = 'Reset to beginning';
+  }
+});
+
+resolutionSelect.addEventListener('change', updateResolution);
+
+charsetSelect.addEventListener('change', (e) => {
+  currentCharset = CHARSET_MAPS[e.target.value];
+});
+
+colorThemeSelect.addEventListener('change', (e) => {
+  const selectedTheme = e.target.value;
+  asciiPlayer.className = ''; // Reset classes
+  asciiPlayer.classList.add(`theme-${selectedTheme}`);
+  status.className = ''; // Reset classes
+  status.classList.add(`theme-${selectedTheme}`);
+  
+  // Update button and control colors
+  document.querySelectorAll('button, .upload-btn').forEach(btn => {
+    btn.style.borderColor = getComputedStyle(asciiPlayer).color;
+    btn.style.color = getComputedStyle(asciiPlayer).color;
+  });
+});
+
+fontSizeInput.addEventListener('input', (e) => {
+  const size = e.target.value;
+  asciiPlayer.style.fontSize = `${size}px`;
+  asciiPlayer.style.lineHeight = `${size}px`;
+  fontSizeValue.textContent = `${size}px`;
+});
+
+playbackSpeed.addEventListener('input', (e) => {
+  const speed = e.target.value;
+  if (video) {
+    video.playbackRate = speed;
+  }
+  speedValue.textContent = `${speed}x`;
+});
+
+initializeCanvas();
+</script>
+</body></html>
