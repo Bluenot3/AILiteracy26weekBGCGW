@@ -1,0 +1,863 @@
+<html><head><base href="." /><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Modern Website Generator</title>
+<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/17.0.2/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/17.0.2/umd/react-dom.production.min.js"></script>
+<style>
+:root {
+  --primary: #2a2a72;
+  --secondary: #009ffd;
+  --accent: #ff0076;
+  --background: #111;
+  --text: #fff;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.title {
+  font-size: 3rem;
+  background: linear-gradient(45deg, var(--secondary), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 1rem;
+}
+
+.builder {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 2rem;
+  background: rgba(255,255,255,0.05);
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+
+.controls {
+  background: rgba(255,255,255,0.05);
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  height: fit-content;
+}
+
+.control-group {
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.control-group:hover {
+  transform: translateX(5px);
+}
+
+.control-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--secondary);
+}
+
+.control-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 0.25rem;
+  background: rgba(255,255,255,0.05);
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.control-input:focus {
+  outline: none;
+  border-color: var(--secondary);
+  box-shadow: 0 0 0 2px rgba(0,159,253,0.2);
+}
+
+.preview {
+  background: white;
+  border-radius: 0.5rem;
+  min-height: 600px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+#previewFrame {
+  background: white;
+  width: 100%;
+  height: 100%;
+  min-height: 600px;
+  border: none;
+  border-radius: 0.5rem;
+}
+
+.button {
+  background: linear-gradient(45deg, var(--secondary), var(--accent));
+  border: none;
+  padding: 0.75rem 1.5rem;
+  color: white;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+}
+
+.code-output {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.9);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  display: none;
+  max-width: 90vw;
+  width: 800px;
+  max-height: 80vh;
+  transition: all 0.3s ease;
+}
+
+.code-output.visible {
+  display: block;
+}
+
+.code-output.collapsed {
+  max-height: 60px;
+  overflow: hidden;
+}
+
+.code-content {
+  background: #1a1a1a;
+  padding: 1rem;
+  border-radius: 0.25rem;
+  margin: 1rem 0;
+  white-space: pre-wrap;
+  max-height: calc(80vh - 120px);
+  overflow-y: auto;
+}
+
+.code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.code-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.collapse-btn {
+  background: rgba(255,255,255,0.1);
+  border: none;
+  padding: 0.5rem;
+  color: white;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.collapse-btn svg {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.3s ease;
+}
+
+.collapsed .collapse-btn svg {
+  transform: rotate(180deg);
+}
+
+.floating-elements {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.floating-element {
+  position: absolute;
+  border-radius: 50%;
+  background: linear-gradient(45deg, var(--secondary), var(--accent));
+  opacity: 0.1;
+  animation: float 20s infinite linear;
+}
+
+@keyframes float {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  100% { transform: translate(100px, 100px) rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .builder {
+    grid-template-columns: 1fr;
+  }
+  
+  .controls {
+    order: 2;
+  }
+  
+  .preview {
+    order: 1;
+    min-height: 400px;
+  }
+  
+  .title {
+    font-size: 2rem;
+  }
+
+  .container {
+    padding: 1rem;
+  }
+}
+
+.nav-link-item,
+.cta-button-item,
+.feature-item {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: rgba(255,255,255,0.05);
+  border-radius: 0.5rem;
+}
+
+textarea.control-input {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.ai-chat {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 300px;
+  height: 400px;
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
+.chat-message {
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+  border-radius: 5px;
+  background: rgba(255,255,255,0.05);
+}
+
+.chat-input {
+  display: flex;
+  gap: 0.5rem;
+}
+
+</style>
+</head>
+<body>
+<div class="floating-elements">
+  <div class="floating-element" style="width: 100px; height: 100px; top: 10%; left: 10%;"></div>
+  <div class="floating-element" style="width: 150px; height: 150px; top: 50%; right: 20%;"></div>
+  <div class="floating-element" style="width: 80px; height: 80px; bottom: 30%; left: 30%;"></div>
+</div>
+
+<div class="container">
+  <header class="header">
+    <h1 class="title">Modern Website Generator</h1>
+    <p>Create stunning, responsive websites in minutes</p>
+  </header>
+
+  <main class="builder">
+    <div class="controls">
+      <div class="control-group">
+        <label class="control-label">Layout Style</label>
+        <select class="control-input" id="layoutStyle">
+          <option value="modern">Modern Minimal</option>
+          <option value="gradient">Gradient Hero</option>
+          <option value="dark">Dark Theme</option>
+          <option value="light">Light & Airy</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label">Header Text</label>
+        <input type="text" class="control-input" id="headerText" value="Welcome to My Site">
+      </div>
+
+      <div class="control-group">
+        <label class="control-label">Accent Color</label>
+        <input type="color" class="control-input" id="accentColor" value="#ff0076">
+      </div>
+      
+      <div class="control-group">
+        <label class="control-label">Secondary Color</label>
+        <input type="color" class="control-input" id="secondaryColor" value="#2a2a72">
+      </div>
+
+      <div class="control-group">
+        <label class="control-label">Font Family</label>
+        <select class="control-input" id="fontFamily">
+          <option value="system">System Default</option>
+          <option value="inter">Inter</option>
+          <option value="poppins">Poppins</option>
+          <option value="roboto">Roboto</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label">Animation Style</label>
+        <select class="control-input" id="animationStyle">
+          <option value="fade">Fade</option>
+          <option value="slide">Slide</option>
+          <option value="bounce">Bounce</option>
+          <option value="none">None</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label">Background Style</label>
+        <select class="control-input" id="backgroundStyle">
+          <option value="solid">Solid Color</option>
+          <option value="gradient">Gradient</option>
+          <option value="glassmorphism">Glassmorphism</option>
+          <option value="morphbox">Morphbox</option>
+        </select>
+      </div>
+
+      <div class="control-group" id="gradientControls">
+        <label class="control-label">Gradient Colors</label>
+        <input type="color" class="control-input" id="gradientColor1" value="#4158D0">
+        <input type="color" class="control-input" id="gradientColor2" value="#C850C0">
+        <input type="range" class="control-input" id="gradientAngle" min="0" max="360" value="45">
+        <label class="control-label">Gradient Angle: <span id="angleValue">45</span>°</label>
+      </div>
+
+      <div class="control-group" id="glassControls">
+        <label class="control-label">Glass Effect</label>
+        <input type="range" class="control-input" id="blurAmount" min="0" max="20" value="10">
+        <label class="control-label">Blur Amount: <span id="blurValue">10</span>px</label>
+        <input type="range" class="control-input" id="transparency" min="0" max="100" value="25">
+        <label class="control-label">Transparency: <span id="transparencyValue">25</span>%</label>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label">Navigation Links</label>
+        <div id="navLinks">
+          <div class="nav-link-item">
+            <input type="text" class="control-input" placeholder="Link Text" data-link-text>
+            <input type="url" class="control-input" placeholder="URL (https://...)" data-link-url>
+            <button class="button" onclick="removeNavLink(this)" style="padding: 0.25rem; margin-top: 0.5rem;">×</button>
+          </div>
+        </div>
+        <button class="button" onclick="addNavLink()" style="width: 100%; margin-top: 0.5rem;">Add Navigation Link</button>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label">Call-to-Action Buttons</label>
+        <div id="ctaButtons">
+          <div class="cta-button-item">
+            <input type="text" class="control-input" placeholder="Button Text" data-button-text>
+            <input type="url" class="control-input" placeholder="URL (https://...)" data-button-url>
+            <input type="color" class="control-input" placeholder="Button Color" data-button-color>
+            <button class="button" onclick="removeCtaButton(this)" style="padding: 0.25rem; margin-top: 0.5rem;">×</button>
+          </div>
+        </div>
+        <button class="button" onclick="addCtaButton()" style="width: 100%; margin-top: 0.5rem;">Add CTA Button</button>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label">Hero Content</label>
+        <textarea class="control-input" id="heroContent" rows="3" placeholder="Enter hero section content">A beautiful website created with the Modern Website Generator</textarea>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label">Features Content</label>
+        <div id="features">
+          <div class="feature-item">
+            <input type="text" class="control-input" placeholder="Feature Title" data-feature-title>
+            <textarea class="control-input" placeholder="Feature Description" data-feature-desc></textarea>
+            <button class="button" onclick="removeFeature(this)" style="padding: 0.25rem; margin-top: 0.5rem;">×</button>
+          </div>
+        </div>
+        <button class="button" onclick="addFeature()" style="width: 100%; margin-top: 0.5rem;">Add Feature</button>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label">Cohere API Key</label>
+        <input type="password" class="control-input" id="cohereApiKey" placeholder="Enter your Cohere API key">
+        <button class="button" style="width: 100%; margin-top: 0.5rem;" onclick="enhanceWithCohere()">Enhance Design with AI</button>
+      </div>
+
+      <button class="button" onclick="generateWebsite()">Generate Website</button>
+    </div>
+
+    <div class="preview">
+      <iframe id="previewFrame" style="width: 100%; height: 100%; border: none;"></iframe>
+    </div>
+  </main>
+</div>
+
+<div class="code-output" id="codeOutput">
+  <div class="code-header">
+    <h3>Generated Code</h3>
+    <div class="code-actions">
+      <button class="collapse-btn" onclick="toggleCodeCollapse()" title="Toggle collapse">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 15l-6-6-6 6"/>
+        </svg>
+      </button>
+      <button class="button" onclick="copyCode()">Copy Code</button>
+    </div>
+  </div>
+  <div class="code-content" id="codeContent"></div>
+</div>
+
+<div class="ai-chat" id="aiChat" style="display: none;">
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-input">
+    <input type="text" id="chatInput" class="control-input" placeholder="Ask the AI about design suggestions...">
+    <button class="button" onclick="sendChatMessage()">Send</button>
+  </div>
+</div>
+
+<script>
+let currentTemplate = '';
+
+function toggleCodeCollapse() {
+  const codeOutput = document.getElementById('codeOutput');
+  codeOutput.classList.toggle('collapsed');
+}
+
+function generateWebsite() {
+  const layoutStyle = document.getElementById('layoutStyle').value;
+  const headerText = document.getElementById('headerText').value;
+  const accentColor = document.getElementById('accentColor').value;
+  const secondaryColor = document.getElementById('secondaryColor').value;
+  const fontFamily = document.getElementById('fontFamily').value;
+  const animationStyle = document.getElementById('animationStyle').value;
+
+  const backgroundStyle = document.getElementById('backgroundStyle').value;
+  const gradientColor1 = document.getElementById('gradientColor1').value;
+  const gradientColor2 = document.getElementById('gradientColor2').value;
+  const gradientAngle = document.getElementById('gradientAngle').value;
+  const blurAmount = document.getElementById('blurAmount').value;
+  const transparency = document.getElementById('transparency').value;
+
+  const getNavLinks = () => {
+    return Array.from(document.querySelectorAll('.nav-link-item')).map(item => ({
+      text: item.querySelector('[data-link-text]').value,
+      url: item.querySelector('[data-link-url]').value
+    }));
+  };
+
+  const getCtaButtons = () => {
+    return Array.from(document.querySelectorAll('.cta-button-item')).map(item => ({
+      text: item.querySelector('[data-button-text]').value,
+      url: item.querySelector('[data-button-url]').value,
+      color: item.querySelector('[data-button-color]').value
+    }));
+  };
+
+  const getFeatures = () => {
+    return Array.from(document.querySelectorAll('.feature-item')).map(item => ({
+      title: item.querySelector('[data-feature-title]').value,
+      description: item.querySelector('[data-feature-desc]').value
+    }));
+  };
+
+  const components = {
+    navLinks: getNavLinks(),
+    ctaButtons: getCtaButtons(),
+    features: getFeatures(),
+    heroContent: document.getElementById('heroContent').value
+  };
+
+  let backgroundCSS = '';
+  switch(backgroundStyle) {
+    case 'gradient':
+      backgroundCSS = `background: linear-gradient(${gradientAngle}deg, ${gradientColor1}, ${gradientColor2});`;
+      break;
+    case 'glassmorphism':
+      backgroundCSS = `
+        background: rgba(255,255,255,${transparency/100});
+        backdrop-filter: blur(${blurAmount}px);
+        -webkit-backdrop-filter: blur(${blurAmount}px);
+      `;
+      break;
+    case 'morphbox':
+      backgroundCSS = `
+        background: rgba(255,255,255,${transparency/100});
+        backdrop-filter: blur(${blurAmount}px);
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.2);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      `;
+      break;
+    default:
+      backgroundCSS = `background: var(--background);`;
+  }
+
+  currentTemplate = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${headerText}</title>
+    <style>
+      :root {
+        --accent: ${accentColor};
+        --secondary: ${secondaryColor};
+        --text: ${layoutStyle === 'dark' ? '#fff' : '#111'};
+        --background: ${layoutStyle === 'dark' ? '#111' : '#fff'};
+      }
+      
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: ${fontFamily === 'system' ? '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' : fontFamily};
+      }
+      
+      body {
+        ${backgroundCSS}
+        color: var(--text);
+        line-height: 1.6;
+      }
+      
+      .container {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
+      }
+      
+      button {
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      
+      button:hover {
+        transform: translateY(-2px);
+        opacity: 0.9;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 1rem;
+        }
+      }
+    </style>
+</head>
+<body>
+    ${components.navLinks.length ? `
+    <nav style="
+      padding: 1rem;
+      background: rgba(${layoutStyle === 'dark' ? '255,255,255,0.1' : '0,0,0,0.1'});
+      backdrop-filter: blur(10px);
+      position: fixed;
+      width: 100%;
+      top: 0;
+      z-index: 1000;
+    ">
+      <div class="container">
+        <h2>${headerText}</h2>
+        <ul style="list-style-type: none; padding: 0;">
+          ${components.navLinks.map(link => `
+          <li>
+            <a href="${link.url}" style="color: var(--text); text-decoration: none;">${link.text}</a>
+          </li>
+          `).join('')}
+        </ul>
+      </div>
+    </nav>
+    ` : ''}
+
+    <section style="
+      min-height: 80vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: ${layoutStyle === 'gradient' ? `linear-gradient(45deg, var(--accent), #2a2a72)` : 'transparent'};
+      padding: 4rem 1rem;
+    ">
+      <div class="container">
+        <h1 style="font-size: clamp(2rem, 5vw, 4rem);">${headerText}</h1>
+        <p style="font-size: clamp(1rem, 2vw, 1.5rem); margin-top: 1rem;">${components.heroContent}</p>
+      </div>
+    </section>
+
+    <section style="padding: 4rem 0;">
+      <div class="container" style="
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+      ">
+        ${components.features.map(feature => `
+        <div style="padding: 2rem; background: rgba(${layoutStyle === 'dark' ? '255,255,255,0.1' : '0,0,0,0.1'}); border-radius: 1rem;">
+          <h3>${feature.title}</h3>
+          <p>${feature.description}</p>
+        </div>
+        `).join('')}
+      </div>
+    </section>
+
+    <section style="
+      text-align: center;
+      padding: 4rem 0;
+      background: var(--accent);
+      color: white;
+    ">
+      <div class="container">
+        ${components.ctaButtons.map(button => `
+        <a href="${button.url}" style="
+          background: ${button.color};
+          padding: 0.75rem 1.5rem;
+          border-radius: 0.25rem;
+          color: white;
+          display: inline-block;
+          margin: 1rem 0;
+          text-decoration: none;
+        ">
+          ${button.text}
+        </a>
+        `).join('')}
+      </div>
+    </section>
+    
+    ${components.navLinks.length ? `
+    <footer style="padding: 2rem 0; background: rgba(${layoutStyle === 'dark' ? '255,255,255,0.05' : '0,0,0,0.05'});">
+      <div class="container">
+        <p>&copy; ${new Date().getFullYear()} ${headerText}. All rights reserved.</p>
+      </div>
+    </footer>
+    ` : ''}
+</body>
+</html>
+`;
+
+  updatePreview();
+  
+  const codeOutput = document.getElementById('codeOutput');
+  codeOutput.classList.add('visible');
+  codeOutput.classList.remove('collapsed');
+  document.getElementById('codeContent').textContent = currentTemplate;
+}
+
+function updatePreview() {
+  const previewFrame = document.getElementById('previewFrame');
+  previewFrame.srcdoc = currentTemplate;
+  adjustPreviewFrame();
+}
+
+function adjustPreviewFrame() {
+  const preview = document.querySelector('.preview');
+  const frame = document.getElementById('previewFrame');
+  frame.style.height = `${preview.offsetHeight}px`;
+}
+
+function copyCode() {
+  navigator.clipboard.writeText(currentTemplate)
+    .then(() => alert('Code copied to clipboard!'))
+    .catch(err => console.error('Failed to copy code:', err));
+}
+
+function addNavLink() {
+  const navLinks = document.getElementById('navLinks');
+  const linkDiv = document.createElement('div');
+  linkDiv.className = 'nav-link-item';
+  linkDiv.innerHTML = `
+    <input type="text" class="control-input" placeholder="Link Text" data-link-text>
+    <input type="url" class="control-input" placeholder="URL (https://...)" data-link-url>
+    <button class="button" onclick="removeNavLink(this)" style="padding: 0.25rem; margin-top: 0.5rem;">×</button>
+  `;
+  navLinks.appendChild(linkDiv);
+}
+
+function removeNavLink(btn) {
+  btn.parentElement.remove();
+}
+
+function addCtaButton() {
+  const ctaButtons = document.getElementById('ctaButtons');
+  const buttonDiv = document.createElement('div');
+  buttonDiv.className = 'cta-button-item';
+  buttonDiv.innerHTML = `
+    <input type="text" class="control-input" placeholder="Button Text" data-button-text>
+    <input type="url" class="control-input" placeholder="URL (https://...)" data-button-url>
+    <input type="color" class="control-input" placeholder="Button Color" data-button-color>
+    <button class="button" onclick="removeCtaButton(this)" style="padding: 0.25rem; margin-top: 0.5rem;">×</button>
+  `;
+  ctaButtons.appendChild(buttonDiv);
+}
+
+function removeCtaButton(btn) {
+  btn.parentElement.remove();
+}
+
+function addFeature() {
+  const features = document.getElementById('features');
+  const featureDiv = document.createElement('div');
+  featureDiv.className = 'feature-item';
+  featureDiv.innerHTML = `
+    <input type="text" class="control-input" placeholder="Feature Title" data-feature-title>
+    <textarea class="control-input" placeholder="Feature Description" data-feature-desc></textarea>
+    <button class="button" onclick="removeFeature(this)" style="padding: 0.25rem; margin-top: 0.5rem;">×</button>
+  `;
+  features.appendChild(featureDiv);
+}
+
+function removeFeature(btn) {
+  btn.parentElement.remove();
+}
+
+async function enhanceWithCohere() {
+  const apiKey = document.getElementById('cohereApiKey').value;
+  if (!apiKey) {
+    alert('Please enter a Cohere API key');
+    return;
+  }
+
+  const prompt = `Enhance this website design with modern trends and improvements: ${currentTemplate}`;
+
+  try {
+    const response = await fetch('https://api.cohere.ai/v1/generate', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'command',
+        prompt: prompt,
+        max_tokens: 500,
+        temperature: 0.7,
+      })
+    });
+
+    const data = await response.json();
+    if (data.generations && data.generations[0]) {
+      const enhancedTemplate = data.generations[0].text;
+      currentTemplate = enhancedTemplate;
+      updatePreview();
+      document.getElementById('codeContent').textContent = currentTemplate;
+    }
+  } catch (error) {
+    console.error('Error calling Cohere API:', error);
+    alert('Error enhancing design. Please check your API key and try again.');
+  }
+}
+
+function initBackgroundControls() {
+  const backgroundStyle = document.getElementById('backgroundStyle');
+  const gradientControls = document.getElementById('gradientControls');
+  const glassControls = document.getElementById('glassControls');
+  
+  backgroundStyle.addEventListener('change', () => {
+    gradientControls.style.display = backgroundStyle.value === 'gradient' ? 'block' : 'none';
+    glassControls.style.display = ['glassmorphism', 'morphbox'].includes(backgroundStyle.value) ? 'block' : 'none';
+    generateWebsite();
+  });
+  
+  gradientControls.style.display = 'none';
+  glassControls.style.display = 'none';
+}
+
+let chatBot;
+async function initAIChat() {
+  const apiKey = document.getElementById('cohereApiKey').value;
+  if (!apiKey) return;
+  
+  document.getElementById('aiChat').style.display = 'flex';
+  chatBot = {
+    async sendMessage(message) {
+      try {
+        const response = await fetch('https://api.cohere.ai/v1/generate', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'command',
+            prompt: `As a website design expert, help with this request: ${message}`,
+            max_tokens: 150,
+            temperature: 0.7,
+          })
+        });
+        const data = await response.json();
+        return data.generations[0].text;
+      } catch (error) {
+        console.error('Error calling Cohere API:', error);
+        return 'Sorry, I encountered an error. Please check your API key.';
+      }
+    }
+  };
+}
+
+async function sendChatMessage() {
+  const input = document.getElementById('chatInput');
+  const messages = document.getElementById('chatMessages');
+  
+  const userMessage = input.value;
+  if (!userMessage.trim()) return;
+  
+  messages.innerHTML += `<div class="chat-message">You: ${userMessage}</div>`;
+  input.value = '';
+  
+  const response = await chatBot.sendMessage(userMessage);
+  messages.innerHTML += `<div class="chat-message">AI: ${response}</div>`;
+  messages.scrollTop = messages.scrollHeight;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initBackgroundControls();
+});
+
+// Initialize with default template
+generateWebsite();
+
+// Add event listeners
+window.addEventListener('resize', adjustPreviewFrame);
+window.addEventListener('load', adjustPreviewFrame);
+
+// Add animation to floating elements
+document.querySelectorAll('.floating-element').forEach(elem => {
+  elem.style.animation = `float ${20 + Math.random() * 10}s infinite linear`;
+});
+</script>
+</body></html>
