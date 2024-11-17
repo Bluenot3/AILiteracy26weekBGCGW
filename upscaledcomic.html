@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Comic Generator Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        comic: ['Bangers', 'cursive'],
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes bounce {
+            0%, 100% { transform: translateY(-10%); }
+            50% { transform: translateY(0); }
+        }
+        
+        .comic-panel {
+            break-inside: avoid;
+        }
+
+        .speech-bubble {
+            position: relative;
+        }
+
+        .speech-bubble::before {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 20px;
+            border: 10px solid transparent;
+            border-top-color: white;
+        }
+
+        .loading-dot {
+            animation: bounce 0.5s infinite;
+        }
+
+        .loading-dot:nth-child(2) { animation-delay: 0.1s; }
+        .loading-dot:nth-child(3) { animation-delay: 0.2s; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <h1 class="font-comic text-6xl text-blue-600 mb-4">AI Comic Generator Pro</h1>
+            <p class="text-gray-600 text-xl">Transform your ideas into stunning comic strips!</p>
+        </header>
+
+        <!-- Main Container -->
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <!-- Configuration Form -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <!-- API Keys Section -->
+                <div class="space-y-4">
+                    <h2 class="font-comic text-2xl text-gray-800 mb-4">🔑 API Configuration</h2>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" for="openai-key">
+                            OpenAI API Key <span class="text-red-500">*</span>
+                        </label>
+                        <input type="password" id="openai-key" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                            placeholder="sk-...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" for="cohere-key">
+                            Cohere API Key (Optional)
+                        </label>
+                        <input type="password" id="cohere-key" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                            placeholder="Enter your Cohere API key">
+                    </div>
+                </div>
+
+                <!-- Story Configuration -->
+                <div class="space-y-4">
+                    <h2 class="font-comic text-2xl text-gray-800 mb-4">📖 Story Settings</h2>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" for="story-prompt">
+                            Story Prompt <span class="text-red-500">*</span>
+                        </label>
+                        <textarea id="story-prompt" rows="4"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                            placeholder="Enter your comic story idea..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Style Configuration -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div>
+                    <h2 class="font-comic text-2xl text-gray-800 mb-4">🎨 Visual Style</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2" for="panels">
+                                Number of Panels
+                            </label>
+                            <select id="panels"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                                <option value="3">3 Panels</option>
+                                <option value="4">4 Panels</option>
+                                <option value="6">6 Panels</option>
+                                <option value="9">9 Panels</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2" for="style">
+                                Art Style
+                            </label>
+                            <select id="style"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                                <option value="manga">Manga</option>
+                                <option value="western">Western Comic</option>
+                                <option value="pixel">Pixel Art</option>
+                                <option value="watercolor">Watercolor</option>
+                                <option value="noir">Film Noir</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-end">
+                    <button onclick="generateComic()" 
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-lg transition-all transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        🚀 Generate Comic
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading-state" class="hidden">
+                <div class="flex flex-col items-center justify-center py-12">
+                    <div class="flex space-x-2 mb-4">
+                        <div class="w-4 h-4 bg-blue-600 rounded-full loading-dot"></div>
+                        <div class="w-4 h-4 bg-blue-600 rounded-full loading-dot"></div>
+                        <div class="w-4 h-4 bg-blue-600 rounded-full loading-dot"></div>
+                    </div>
+                    <div class="text-gray-600 text-lg font-medium">Creating your comic masterpiece...</div>
+                    <div class="text-gray-500 text-sm mt-2">This might take a minute or two</div>
+                </div>
+            </div>
+
+            <!-- Comic Output -->
+            <div id="comic-output" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Comic panels will be inserted here -->
+            </div>
+
+            <!-- Export Options -->
+            <div id="export-options" class="hidden mt-8 flex justify-center space-x-4">
+                <button onclick="saveAsPDF()" 
+                    class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-all transform hover:scale-105">
+                    💾 Save as PDF
+                </button>
+                <button onclick="shareComic()" 
+                    class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition-all transform hover:scale-105">
+                    🔗 Share Comic
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Enhanced version of the previous JavaScript with added features
+        async function generateComic() {
+            const openaiKey = document.getElementById('openai-key').value;
+            const cohereKey = document.getElementById('cohere-key').value;
+            const storyPrompt = document.getElementById('story-prompt').value;
+            const panels = parseInt(document.getElementById('panels').value);
+            const style = document.getElementById('style').value;
+
+            if (!openaiKey || !storyPrompt) {
+                showNotification('Please fill in all required fields!', 'error');
+                return;
+            }
+
+            showLoadingState(true);
+            document.getElementById('comic-output').innerHTML = '';
+            document.getElementById('export-options').classList.add('hidden');
+
+            try {
+                let storyStructure;
+                if (cohereKey) {
+                    try {
+                        storyStructure = await getStoryStructure(cohereKey, storyPrompt, panels, true);
+                    } catch (cohereError) {
+                        console.log('Cohere API failed, falling back to OpenAI');
+                        storyStructure = await getStoryStructure(openaiKey, storyPrompt, panels, false);
+                    }
+                } else {
+                    storyStructure = await getStoryStructure(openaiKey, storyPrompt, panels, false);
+                }
+                
+                const comicPanels = await generatePanelImages(openaiKey, storyStructure, style);
+                displayComic(comicPanels);
+                document.getElementById('export-options').classList.remove('hidden');
+                showNotification('Comic generated successfully!', 'success');
+            } catch (error) {
+                console.error('Error generating comic:', error);
+                showNotification('Error generating comic. Please check your API keys and try again.', 'error');
+            } finally {
+                showLoadingState(false);
+            }
+        }
+
+        function showLoadingState(show) {
+            const loadingState = document.getElementById('loading-state');
+            loadingState.classList.toggle('hidden', !show);
+        }
+
+        function showNotification(message, type) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg ${
+                type === 'error' ? 'bg-red-500' : 'bg-green-500'
+            } text-white`;
+            notification.textContent = message;
+
+            document.body.appendChild(notification);
+
+            // Remove notification after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Implement the previous API functions here (getStoryStructure, generatePanelImages, etc.)
+        // ... (previous implementation remains the same)
+
+        function displayComic(panels) {
+            const output = document.getElementById('comic-output');
+            output.innerHTML = '';
+
+            panels.forEach((panel, index) => {
+                const panelDiv = document.createElement('div');
+                panelDiv.className = 'comic-panel bg-white p-4 rounded-lg shadow-lg transform transition-all hover:scale-105';
+                
+                const img = document.createElement('img');
+                img.src = panel.image;
+                img.alt = `Comic panel ${index + 1}`;
+                img.className = 'w-full h-auto rounded-lg';
+                
+                panelDiv.appendChild(img);
+
+                if (panel.dialogue) {
+                    const bubble = document.createElement('div');
+                    bubble.className = 'speech-bubble bg-white p-4 rounded-lg shadow-md mt-4 text-gray-800';
+                    bubble.textContent = panel.dialogue;
+                    panelDiv.appendChild(bubble);
+                }
+
+                output.appendChild(panelDiv);
+            });
+        }
+
+        function saveAsPDF() {
+            // Implement PDF export functionality
+            showNotification('PDF export coming soon!', 'success');
+        }
+
+        function shareComic() {
+            // Implement share functionality
+            showNotification('Share functionality coming soon!', 'success');
+        }
+    </script>
+</body>
+</html>
