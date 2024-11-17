@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZEN AI Pioneer Program - Google Sites Tutorial</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        function toggleSection(id) {
+            const content = document.getElementById(id);
+            const icon = document.getElementById(`icon-${id}`);
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.innerHTML = '−';
+            } else {
+                content.classList.add('hidden');
+                icon.innerHTML = '+';
+            }
+        }
+
+        function markComplete(id) {
+            const checkbox = document.getElementById(id);
+            const label = document.querySelector(`label[for="${id}"]`);
+            if (checkbox.checked) {
+                label.classList.add('line-through', 'text-gray-500');
+            } else {
+                label.classList.remove('line-through', 'text-gray-500');
+            }
+        }
+
+        function copyCode(id) {
+            const code = document.getElementById(id).innerText;
+            navigator.clipboard.writeText(code);
+            const btn = document.getElementById(`btn-${id}`);
+            btn.innerText = 'Copied!';
+            setTimeout(() => {
+                btn.innerText = 'Copy';
+            }, 2000);
+        }
+    </script>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-12">
+        <div class="container mx-auto px-4">
+            <h1 class="text-4xl font-bold text-center mb-4">Creating Engaging Google Sites</h1>
+            <p class="text-xl text-center">ZEN AI Pioneer Program Guide</p>
+        </div>
+    </header>
+
+    <!-- Progress Tracker -->
+    <div class="container mx-auto px-4 py-6">
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Your Progress</h2>
+            <div class="space-y-3">
+                <div class="flex items-center">
+                    <input type="checkbox" id="section1" class="mr-3" onchange="markComplete('section1')">
+                    <label for="section1" class="text-lg">Introduction to Google Sites</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="section2" class="mr-3" onchange="markComplete('section2')">
+                    <label for="section2" class="text-lg">Embedding AI Tools</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="section3" class="mr-3" onchange="markComplete('section3')">
+                    <label for="section3" class="text-lg">HTML Basics for Customization</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="section4" class="mr-3" onchange="markComplete('section4')">
+                    <label for="section4" class="text-lg">Content Creation Techniques</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="section5" class="mr-3" onchange="markComplete('section5')">
+                    <label for="section5" class="text-lg">Showcasing Projects</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Introduction Section -->
+        <section class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex justify-between items-center cursor-pointer" onclick="toggleSection('intro-content')">
+                <h2 class="text-2xl font-semibold">Introduction to Google Sites 🌐</h2>
+                <button id="icon-intro-content" class="text-2xl font-bold">+</button>
+            </div>
+            <div id="intro-content" class="hidden mt-4">
+                <h3 class="text-xl font-semibold mb-3">Getting Started</h3>
+                <ol class="list-decimal pl-6 space-y-3">
+                    <li>Visit sites.google.com and sign in with your Google account</li>
+                    <li>Click the + button to create a new site</li>
+                    <li>Choose a template or start from scratch</li>
+                    <li>Name your site in the top left corner</li>
+                </ol>
+
+                <div class="bg-gray-100 p-4 rounded-lg mt-4">
+                    <h4 class="font-semibold mb-2">Pro Tips:</h4>
+                    <ul class="list-disc pl-6">
+                        <li>Use a clear, memorable site name</li>
+                        <li>Consider your audience when choosing a template</li>
+                        <li>Familiarize yourself with the basic layout tools</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI Tools Section -->
+        <section class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex justify-between items-center cursor-pointer" onclick="toggleSection('ai-content')">
+                <h2 class="text-2xl font-semibold">Embedding AI Tools 🤖</h2>
+                <button id="icon-ai-content" class="text-2xl font-bold">+</button>
+            </div>
+            <div id="ai-content" class="hidden mt-4">
+                <h3 class="text-xl font-semibold mb-3">AI Integration Guide</h3>
+                <div class="space-y-4">
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <h4 class="font-semibold mb-2">Embedding AI Chatbots:</h4>
+                        <pre class="bg-gray-800 text-white p-4 rounded-lg" id="chatbot-code">
+&lt;iframe
+    src="your-chatbot-url"
+    width="100%"
+    height="500"
+    frameborder="0"
+&gt;&lt;/iframe&gt;</pre>
+                        <button id="btn-chatbot-code" onclick="copyCode('chatbot-code')" class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Copy</button>
+                    </div>
+
+                    <div class="mt-4">
+                        <h4 class="font-semibold mb-2">AI Content Suggestions:</h4>
+                        <ul class="list-disc pl-6">
+                            <li>Use AI for generating FAQ content</li>
+                            <li>Implement AI-powered search functionality</li>
+                            <li>Add AI-generated image galleries</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- HTML Basics Section -->
+        <section class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex justify-between items-center cursor-pointer" onclick="toggleSection('html-content')">
+                <h2 class="text-2xl font-semibold">HTML Basics for Customization 💻</h2>
+                <button id="icon-html-content" class="text-2xl font-bold">+</button>
+            </div>
+            <div id="html-content" class="hidden mt-4">
+                <h3 class="text-xl font-semibold mb-3">Essential HTML Elements</h3>
+                <div class="space-y-4">
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <h4 class="font-semibold mb-2">Basic Structure:</h4>
+                        <pre class="bg-gray-800 text-white p-4 rounded-lg" id="html-basic-code">
+&lt;div class="custom-section"&gt;
+    &lt;h2&gt;Section Title&lt;/h2&gt;
+    &lt;p&gt;Your content here&lt;/p&gt;
+    &lt;button&gt;Click Me&lt;/button&gt;
+&lt;/div&gt;</pre>
+                        <button id="btn-html-basic-code" onclick="copyCode('html-basic-code')" class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Copy</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Content Creation Section -->
+        <section class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex justify-between items-center cursor-pointer" onclick="toggleSection('content-creation')">
+                <h2 class="text-2xl font-semibold">Content Creation Techniques ✍️</h2>
+                <button id="icon-content-creation" class="text-2xl font-bold">+</button>
+            </div>
+            <div id="content-creation" class="hidden mt-4">
+                <h3 class="text-xl font-semibold mb-3">Effective Content Strategies</h3>
+                <div class="space-y-4">
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <h4 class="font-semibold mb-2">Content Guidelines:</h4>
+                        <ul class="list-disc pl-6">
+                            <li>Use clear, concise language</li>
+                            <li>Include relevant images and videos</li>
+                            <li>Organize content in logical sections</li>
+                            <li>Maintain consistent styling</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Showcasing Projects Section -->
+        <section class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex justify-between items-center cursor-pointer" onclick="toggleSection('showcase-content')">
+                <h2 class="text-2xl font-semibold">Showcasing Projects 🎥</h2>
+                <button id="icon-showcase-content" class="text-2xl font-bold">+</button>
+            </div>
+            <div id="showcase-content" class="hidden mt-4">
+                <h3 class="text-xl font-semibold mb-3">Portfolio Best Practices</h3>
+                <div class="space-y-4">
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <h4 class="font-semibold mb-2">Project Presentation Tips:</h4>
+                        <ul class="list-disc pl-6">
+                            <li>Use high-quality screenshots</li>
+                            <li>Include project descriptions</li>
+                            <li>Add demonstration videos</li>
+                            <li>Highlight key achievements</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-4 text-center">
+            <p>© 2024 ZEN AI Pioneer Program. All rights reserved.</p>
+            <p class="mt-2">Need help? Contact our support team</p>
+        </div>
+    </footer>
+</body>
+</html>
