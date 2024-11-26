@@ -1,0 +1,633 @@
+<html>
+<head>
+    <base href="https://websimcreationengine.com/dynamic-image-generator/">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Image Generator</title>
+    <meta name="description" content="Generate high-quality images with customizable styles and options using OpenAI's API.">
+    <meta name="author" content="Your Name">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Raleway:wght@300;400;700&family=Space+Grotesk:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- CSS Styles -->
+    <style>
+        :root {
+            --primary: #00ffcc;
+            --secondary: #ff00cc;
+            --bg-dark: #0a0a1a;
+            --bg-medium: #12122e;
+            --bg-light: #1a1a3e;
+            --accent: #ff6bea;
+            --text-light: #ffffff;
+            --text-muted: #a9a9a9;
+            --hover-glow: rgba(0, 255, 204, 0.3);
+            --button-gradient: linear-gradient(135deg, var(--primary), var(--secondary));
+            --border-radius: 15px;
+            --transition-speed: 0.4s;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            scroll-behavior: smooth;
+            transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        html {
+            font-size: 16px;
+        }
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: radial-gradient(circle at center, var(--bg-dark) 0%, var(--bg-medium) 50%, var(--bg-light) 100%);
+            min-height: 100vh;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            overflow-x: hidden;
+        }
+        .container {
+            background-color: rgba(10, 10, 26, 0.95);
+            border-radius: var(--border-radius);
+            padding: 3rem;
+            max-width: 1400px;
+            width: 100%;
+            box-shadow:
+                0 20px 40px rgba(0, 255, 204, 0.2),
+                0 0 150px rgba(0, 255, 204, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 204, 0.2);
+            animation: fadeIn 1s ease-in-out;
+        }
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+        .input-group {
+            position: relative;
+        }
+        .input-group label {
+            position: absolute;
+            left: 1rem;
+            top: -0.8rem;
+            background-color: rgba(10, 10, 26, 0.95);
+            padding: 0 0.5rem;
+            font-size: 0.85rem;
+            color: var(--primary);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            pointer-events: none;
+        }
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 0.9rem 1rem;
+            font-size: 1rem;
+            border: 1px solid var(--primary);
+            border-radius: 10px;
+            background-color: rgba(26, 26, 62, 0.8);
+            color: var(--text-light);
+            outline: none;
+            transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .input-group input:focus,
+        .input-group select:focus {
+            border-color: var(--accent);
+            box-shadow:
+                0 0 10px rgba(255, 107, 234, 0.5),
+                0 0 20px rgba(255, 107, 234, 0.3);
+        }
+        .input-group input::placeholder {
+            color: var(--text-muted);
+        }
+        .generate-btn {
+            grid-column: span 2;
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-light);
+            background: var(--button-gradient);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+            font-family: 'Orbitron', sans-serif;
+            align-self: center;
+        }
+        .generate-btn:hover {
+            transform: translateY(-5px);
+            box-shadow:
+                0 15px 30px rgba(0, 255, 204, 0.4),
+                0 0 40px rgba(255, 0, 204, 0.3);
+        }
+        .generate-btn:active {
+            transform: translateY(2px);
+        }
+        .generate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 2rem 0;
+            color: var(--primary);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            position: relative;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(0, 255, 204, 0.3);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem auto;
+        }
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .image-item {
+            background-color: var(--bg-medium);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 255, 204, 0.2);
+            transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+            position: relative;
+        }
+        .image-item:hover {
+            transform: translateY(-5px);
+            box-shadow:
+                0 15px 30px rgba(0, 255, 204, 0.4),
+                0 0 40px rgba(255, 0, 204, 0.3);
+        }
+        .image-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform var(--transition-speed) ease;
+        }
+        .image-info {
+            padding: 1.5rem;
+            background: linear-gradient(to top, rgba(10, 10, 26, 0.95), rgba(10, 10, 26, 0.8));
+        }
+        .image-info h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+        .image-info p {
+            font-size: 0.95rem;
+            color: var(--text-light);
+            line-height: 1.5;
+            margin-bottom: 0.5rem;
+        }
+        .download-btn {
+            display: inline-block;
+            padding: 0.6rem 1.2rem;
+            background: var(--button-gradient);
+            color: var(--text-light);
+            text-decoration: none;
+            border-radius: 30px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+            transition: background var(--transition-speed) ease;
+        }
+        .download-btn:hover {
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            .generate-btn {
+                grid-column: span 1;
+            }
+            .input-group label {
+                font-size: 0.8rem;
+            }
+            .input-group input,
+            .input-group select {
+                font-size: 0.9rem;
+                padding: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Enhanced Image Generator</h1>
+        <div class="controls">
+            <div class="input-group">
+                <label for="apiKey">API Key</label>
+                <input type="password" id="apiKey" placeholder="Enter your OpenAI API Key" required aria-required="true">
+            </div>
+            <div class="input-group">
+                <label for="userPrompt">Image Prompt</label>
+                <input type="text" id="userPrompt" placeholder="Enter your image prompt" required aria-required="true">
+            </div>
+            <div class="input-group">
+                <label for="styleSelect">Style</label>
+                <select id="styleSelect">
+                    <option value="realistic">Realistic</option>
+                    <option value="cartoon">Cartoon</option>
+                    <option value="watercolor">Watercolor</option>
+                    <option value="pixel_art">Pixel Art</option>
+                    <option value="abstract">Abstract</option>
+                    <option value="surrealism">Surrealism</option>
+                    <option value="pop_art">Pop Art</option>
+                    <option value="cyberpunk">Cyberpunk</option>
+                    <option value="steampunk">Steampunk</option>
+                    <option value="vaporwave">Vaporwave</option>
+                    <option value="modern_minimalism">Modern Minimalism</option>
+                    <option value="fantasy">Fantasy</option>
+                    <option value="retro">Retro</option>
+                    <option value="anime">Anime</option>
+                    <option value="noir">Noir</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="colorScheme">Color Scheme</label>
+                <select id="colorScheme">
+                    <option value="vibrant">Vibrant</option>
+                    <option value="pastel">Pastel</option>
+                    <option value="monochrome">Monochrome</option>
+                    <option value="neon">Neon</option>
+                    <option value="earthy">Earthy</option>
+                    <option value="cool">Cool</option>
+                    <option value="warm">Warm</option>
+                    <option value="duotone">Duotone</option>
+                    <option value="gradient">Gradient</option>
+                    <option value="metallic">Metallic</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="mood">Mood</label>
+                <select id="mood">
+                    <option value="happy">Happy</option>
+                    <option value="mysterious">Mysterious</option>
+                    <option value="calm">Calm</option>
+                    <option value="energetic">Energetic</option>
+                    <option value="melancholic">Melancholic</option>
+                    <option value="romantic">Romantic</option>
+                    <option value="ominous">Ominous</option>
+                    <option value="inspirational">Inspirational</option>
+                    <option value="whimsical">Whimsical</option>
+                    <option value="peaceful">Peaceful</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="lighting">Lighting</label>
+                <select id="lighting">
+                    <option value="golden_hour">Golden Hour</option>
+                    <option value="noon">Noon</option>
+                    <option value="night">Night</option>
+                    <option value="studio_lighting">Studio Lighting</option>
+                    <option value="natural_light">Natural Light</option>
+                    <option value="backlit">Backlit</option>
+                    <option value="soft_light">Soft Light</option>
+                    <option value="dramatic">Dramatic Lighting</option>
+                    <option value="low_key">Low Key</option>
+                    <option value="high_key">High Key</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="artist">Artist Style</label>
+                <select id="artist">
+                    <option value="van_gogh">Vincent van Gogh</option>
+                    <option value="picasso">Pablo Picasso</option>
+                    <option value="da_vinci">Leonardo da Vinci</option>
+                    <option value="monet">Claude Monet</option>
+                    <option value="warhol">Andy Warhol</option>
+                    <option value="dali">Salvador Dalí</option>
+                    <option value="hokusai">Katsushika Hokusai</option>
+                    <option value="o_keeffe">Georgia O'Keeffe</option>
+                    <option value="kahlo">Frida Kahlo</option>
+                    <option value="mc_escher">M.C. Escher</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="medium">Medium</label>
+                <select id="medium">
+                    <option value="oil_painting">Oil Painting</option>
+                    <option value="digital_art">Digital Art</option>
+                    <option value="sketch">Sketch</option>
+                    <option value="photography">Photography</option>
+                    <option value="3d_render">3D Render</option>
+                    <option value="watercolor">Watercolor</option>
+                    <option value="charcoal_drawing">Charcoal Drawing</option>
+                    <option value="graffiti">Graffiti</option>
+                    <option value="collage">Collage</option>
+                    <option value="ceramics">Ceramics</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="cameraType">Camera Type</label>
+                <select id="cameraType">
+                    <option value="dslr">DSLR</option>
+                    <option value="polaroid">Polaroid</option>
+                    <option value="drone">Drone</option>
+                    <option value="underwater">Underwater</option>
+                    <option value="smartphone">Smartphone</option>
+                    <option value="film_camera">Film Camera</option>
+                    <option value="instax">Instax</option>
+                    <option value="thermal">Thermal</option>
+                    <option value="fisheye">Fisheye Lens</option>
+                    <option value="micro">Microscopic Lens</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="imageSize">Image Size</label>
+                <select id="imageSize">
+                    <option value="1024x1024">1024x1024</option>
+                    <option value="512x512">512x512</option>
+                    <option value="256x256">256x256</option>
+                </select>
+            </div>
+            <button class="generate-btn" id="generateBtn">Generate Images</button>
+        </div>
+        <div class="loading" id="loadingIndicator">
+            <div class="spinner"></div>
+            Generating your masterpiece...
+        </div>
+        <div class="image-grid" id="imageGrid"></div>
+    </div>
+    <!-- JavaScript Code -->
+    <script>
+        // DOM Elements
+        const apiKeyInput = document.getElementById('apiKey');
+        const userPromptInput = document.getElementById('userPrompt');
+        const styleSelect = document.getElementById('styleSelect');
+        const colorSchemeSelect = document.getElementById('colorScheme');
+        const moodSelect = document.getElementById('mood');
+        const lightingSelect = document.getElementById('lighting');
+        const artistSelect = document.getElementById('artist');
+        const mediumSelect = document.getElementById('medium');
+        const cameraTypeSelect = document.getElementById('cameraType');
+        const imageSizeSelect = document.getElementById('imageSize');
+        const generateBtn = document.getElementById('generateBtn');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const imageGrid = document.getElementById('imageGrid');
+
+        // Option Mappings
+        const styles = {
+            "realistic": "photorealistic, highly detailed",
+            "cartoon": "colorful cartoon style, exaggerated features",
+            "watercolor": "soft watercolor painting, delicate brush strokes",
+            "pixel_art": "retro pixel art style, 8-bit graphics",
+            "abstract": "abstract art, non-representational forms and colors",
+            "surrealism": "dreamlike surrealist art, impossible scenes",
+            "pop_art": "bold pop art style, vibrant colors and patterns",
+            "cyberpunk": "futuristic cyberpunk aesthetic, neon lights, high-tech",
+            "steampunk": "Victorian-era steampunk, brass gears, steam-powered machinery",
+            "vaporwave": "1980s-inspired vaporwave aesthetic, pastel colors, retro elements",
+            "modern_minimalism": "clean modern minimalism, simple shapes, open space",
+            "fantasy": "fantastical elements, mythical creatures, magical themes",
+            "retro": "vintage retro style, nostalgic feel",
+            "anime": "Japanese anime style, sharp lines, expressive characters",
+            "noir": "dark film noir style, high contrast, shadows"
+        };
+        const colorSchemes = {
+            "vibrant": "bold and vibrant color palette",
+            "pastel": "soft and muted pastel colors",
+            "monochrome": "single color in various shades and tones",
+            "neon": "bright neon colors, glowing effect",
+            "earthy": "natural earth tones, warm and organic colors",
+            "cool": "cool colors like blues and greens",
+            "warm": "warm colors like reds and oranges",
+            "duotone": "two-tone color scheme",
+            "gradient": "smooth gradient transitions",
+            "metallic": "shiny metallic colors"
+        };
+        const moods = {
+            "happy": "joyful and uplifting atmosphere",
+            "mysterious": "enigmatic and intriguing ambiance",
+            "calm": "serene and peaceful environment",
+            "energetic": "dynamic and lively composition",
+            "melancholic": "thoughtful and slightly sad mood",
+            "romantic": "romantic and passionate feel",
+            "ominous": "foreboding and ominous tone",
+            "inspirational": "uplifting and motivational vibe",
+            "whimsical": "playful and whimsical mood",
+            "peaceful": "tranquil and harmonious setting"
+        };
+        const lightings = {
+            "golden_hour": "soft warm lighting during golden hour",
+            "noon": "bright overhead sunlight at noon",
+            "night": "dark nighttime scene with artificial lights",
+            "studio_lighting": "professional studio lighting setup",
+            "natural_light": "natural light with soft shadows",
+            "backlit": "subject lit from behind, silhouette effect",
+            "soft_light": "diffused soft lighting for gentle feel",
+            "dramatic": "dramatic high-contrast lighting",
+            "low_key": "dark shadows with minimal lighting",
+            "high_key": "bright lighting with minimal shadows"
+        };
+        const artists = {
+            "van_gogh": "in the style of Vincent van Gogh, expressive brushwork",
+            "picasso": "in the style of Pablo Picasso, abstract forms",
+            "da_vinci": "in the style of Leonardo da Vinci, classical realism",
+            "monet": "in the style of Claude Monet, impressionist techniques",
+            "warhol": "in the style of Andy Warhol, pop art aesthetic",
+            "dali": "in the style of Salvador Dalí, surreal imagery",
+            "hokusai": "in the style of Katsushika Hokusai, Japanese woodblock",
+            "o_keeffe": "in the style of Georgia O'Keeffe, enlarged natural forms",
+            "kahlo": "in the style of Frida Kahlo, vibrant and symbolic",
+            "mc_escher": "in the style of M.C. Escher, mathematical and impossible structures"
+        };
+        const mediums = {
+            "oil_painting": "oil painting with rich textures",
+            "digital_art": "digital art with crisp lines",
+            "sketch": "rough sketch drawing, pencil strokes",
+            "photography": "high-resolution photography",
+            "3d_render": "detailed 3D render with realistic textures",
+            "watercolor": "watercolor painting with fluid strokes",
+            "charcoal_drawing": "charcoal drawing with deep contrasts",
+            "graffiti": "graffiti art with street style",
+            "collage": "collage of mixed media elements",
+            "ceramics": "ceramic art, sculpted forms"
+        };
+        const cameraTypes = {
+            "dslr": "captured with a DSLR camera, professional quality",
+            "polaroid": "instant polaroid photograph, vintage feel",
+            "drone": "aerial view from a drone camera",
+            "underwater": "underwater camera capturing marine life",
+            "smartphone": "casual shot from a smartphone camera",
+            "film_camera": "analog film photography, grainy texture",
+            "instax": "Instax mini photo, instant film",
+            "thermal": "thermal imaging camera effects",
+            "fisheye": "fisheye lens effect, distorted wide-angle",
+            "micro": "captured through a microscopic lens, extreme close-up"
+        };
+
+        // Construct Prompt
+        function constructPrompt(basePrompt, options) {
+            let prompt = `Create an image of ${basePrompt}.`;
+            prompt += ` Style: ${styles[options.style] || 'realistic'}.`;
+            prompt += ` Color scheme: ${colorSchemes[options.colorScheme] || 'vibrant'}.`;
+            prompt += ` Mood: ${moods[options.mood] || 'calm'}.`;
+            prompt += ` Lighting: ${lightings[options.lighting] || 'natural light'}.`;
+            prompt += ` Artist style: ${artists[options.artist] || ''}.`;
+            prompt += ` Medium: ${mediums[options.medium] || 'digital art'}.`;
+            prompt += ` Camera type: ${cameraTypes[options.cameraType] || ''}.`;
+            prompt += ` High resolution, highly detailed, ultra-high-definition.`;
+            return prompt.trim();
+        }
+
+        // Generate Image
+        async function generateImage(apiKey, prompt, size) {
+            if (!apiKey || !prompt) {
+                throw new Error('API key and prompt are required');
+            }
+            try {
+                const response = await fetch('https://api.openai.com/v1/images/generations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: "dall-e-3",
+                        prompt: prompt,
+                        n: 1,
+                        size: size
+                    })
+                });
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error?.message || `HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                if (!data?.data?.[0]?.url) {
+                    throw new Error('Invalid response format from API');
+                }
+                return data.data[0].url;
+            } catch (error) {
+                console.error('Error generating image:', error);
+                throw error;
+            }
+        }
+
+        // Display Image
+        function displayImage(imageUrl, options, prompt) {
+            const imageItem = document.createElement('div');
+            imageItem.className = 'image-item';
+            imageItem.innerHTML = `
+                <img src="${imageUrl}" alt="${options.style.replace('_', ' ')} style image of ${prompt}" width="1024" height="1024" loading="lazy">
+                <div class="image-info">
+                    <h3>${options.style.charAt(0).toUpperCase() + options.style.slice(1).replace('_', ' ')} Style</h3>
+                    <p>${prompt}</p>
+                    <p>Color Scheme: ${options.colorScheme.replace('_', ' ')}, Mood: ${options.mood.replace('_', ' ')}</p>
+                    <p>Lighting: ${options.lighting.replace('_', ' ')}, Artist: ${options.artist.replace('_', ' ')}, Medium: ${options.medium.replace('_', ' ')}, Camera: ${options.cameraType.replace('_', ' ')}</p>
+                    <a href="${imageUrl}" download="generated_image.jpg" class="download-btn">Download</a>
+                </div>
+            `;
+            imageGrid.appendChild(imageItem);
+        }
+
+        // Get Random Option
+        function getRandomOption(optionsObj) {
+            const keys = Object.keys(optionsObj);
+            return keys[Math.floor(Math.random() * keys.length)];
+        }
+
+        // Get Random Style Combination
+        function getRandomStyleCombination() {
+            return {
+                style: getRandomOption(styles),
+                colorScheme: getRandomOption(colorSchemes),
+                mood: getRandomOption(moods),
+                lighting: getRandomOption(lightings),
+                artist: getRandomOption(artists),
+                medium: getRandomOption(mediums),
+                cameraType: getRandomOption(cameraTypes),
+                imageSize: "1024x1024"
+            };
+        }
+
+        // Event Listener
+        generateBtn.addEventListener('click', async () => {
+            const apiKey = apiKeyInput.value.trim();
+            const basePrompt = userPromptInput.value.trim();
+            const selectedOptions = {
+                style: styleSelect.value,
+                colorScheme: colorSchemeSelect.value,
+                mood: moodSelect.value,
+                lighting: lightingSelect.value,
+                artist: artistSelect.value,
+                medium: mediumSelect.value,
+                cameraType: cameraTypeSelect.value,
+                imageSize: imageSizeSelect.value
+            };
+            if (!apiKey || !basePrompt) {
+                alert('Please enter both API Key and Prompt');
+                return;
+            }
+            generateBtn.disabled = true;
+            loadingIndicator.style.display = 'block';
+            imageGrid.innerHTML = '';
+            try {
+                // User's Selected Style
+                const userPrompt = constructPrompt(basePrompt, selectedOptions);
+                const userImageUrl = await generateImage(apiKey, userPrompt, selectedOptions.imageSize);
+                if (userImageUrl) {
+                    displayImage(userImageUrl, selectedOptions, basePrompt);
+                }
+                // Generate Additional Variations
+                for (let i = 0; i < 3; i++) {
+                    const randomOptions = getRandomStyleCombination();
+                    const randomPrompt = constructPrompt(basePrompt, randomOptions);
+                    const randomImageUrl = await generateImage(apiKey, randomPrompt, "1024x1024");
+                    if (randomImageUrl) {
+                        displayImage(randomImageUrl, randomOptions, basePrompt);
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert(`Error: ${error.message}`);
+            } finally {
+                loadingIndicator.style.display = 'none';
+                generateBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
