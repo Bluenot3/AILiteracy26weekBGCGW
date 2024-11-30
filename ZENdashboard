@@ -1,0 +1,268 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { RefreshCw, Mail, Sun, Cloud, Bitcoin, Brain, Edit2, Save, Plus, Settings, Search, 
+         TrendingUp, TrendingDown, DollarSign, Users, Clock, Database, Key, Shield, 
+         Activity, BarChart2, CreditCard, AlertTriangle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
+        <p className="text-sm font-medium text-gray-600">{label}</p>
+        {payload.map((entry, index) => (
+          <p key={index} className="text-sm" style={{ color: entry.color }}>
+            {entry.name}: {entry.value.toLocaleString()}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
+const Dashboard = () => {
+  // State Management
+  const [metrics, setMetrics] = useState({
+    apiCalls: { total: 150000, change: '+15%', trend: 'up' },
+    revenue: { total: 25000, change: '+23%', trend: 'up' },
+    activeModels: { total: 5, change: '+5%', trend: 'up' },
+    costs: { total: 3500, change: '-8%', trend: 'down' }
+  });
+
+  const [apiUsage, setApiUsage] = useState({
+    data: [],
+    limits: {
+      daily: 1000000,
+      monthly: 30000000,
+      current: 450000
+    }
+  });
+
+  const [models, setModels] = useState([
+    {
+      id: 'claude-3',
+      name: 'Claude 3 Opus',
+      provider: 'Anthropic',
+      status: 'active',
+      usage: 75,
+      apiCalls: 15000,
+      costPerCall: 0.0085
+    },
+    {
+      id: 'gpt-4',
+      name: 'GPT-4 Turbo',
+      provider: 'OpenAI',
+      status: 'active',
+      usage: 60,
+      apiCalls: 12000,
+      costPerCall: 0.01
+    }
+  ]);
+
+  // Generate mock API usage data
+  useEffect(() => {
+    const generateData = () => {
+      const now = Date.now();
+      const data = Array.from({ length: 24 }, (_, i) => ({
+        time: new Date(now - (23 - i) * 3600000).toLocaleTimeString(),
+        calls: Math.floor(Math.random() * 5000 + 1000),
+        tokens: Math.floor(Math.random() * 50000 + 10000),
+        cost: Math.random() * 50 + 10
+      }));
+
+      setApiUsage(prev => ({
+        ...prev,
+        data
+      }));
+    };
+
+    generateData();
+    const interval = setInterval(generateData, 300000); // Update every 5 minutes
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Navigation */}
+      <nav className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <h1 className="text-2xl font-bold text-gray-900">Enterprise AI Dashboard</h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Button variant="outline" size="sm">
+                <Settings className="w-4 h-4 mr-2" />
+                Settings
+              </Button>
+              <Avatar>
+                <AvatarImage src="/placeholder-avatar.jpg" />
+                <AvatarFallback>ZA</AvatarFallback>
+              </Avatar>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Metrics Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">API Calls</p>
+                  <h3 className="text-2xl font-bold mt-2">{metrics.apiCalls.total.toLocaleString()}</h3>
+                </div>
+                <div className="p-2 rounded-full bg-blue-100">
+                  <Activity className="w-5 h-5 text-blue-600" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center">
+                <span className="text-sm text-green-600">{metrics.apiCalls.change}</span>
+                <span className="text-sm text-gray-500 ml-2">vs last period</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Revenue</p>
+                  <h3 className="text-2xl font-bold mt-2">${metrics.revenue.total.toLocaleString()}</h3>
+                </div>
+                <div className="p-2 rounded-full bg-green-100">
+                  <TrendingUp className="w-5 h-5 text-green-600" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center">
+                <span className="text-sm text-green-600">{metrics.revenue.change}</span>
+                <span className="text-sm text-gray-500 ml-2">vs last period</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Active Models</p>
+                  <h3 className="text-2xl font-bold mt-2">{models.length}</h3>
+                </div>
+                <div className="p-2 rounded-full bg-purple-100">
+                  <Brain className="w-5 h-5 text-purple-600" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center">
+                <span className="text-sm text-green-600">{metrics.activeModels.change}</span>
+                <span className="text-sm text-gray-500 ml-2">vs last period</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Cost per 1K Calls</p>
+                  <h3 className="text-2xl font-bold mt-2">${(metrics.costs.total / metrics.apiCalls.total * 1000).toFixed(2)}</h3>
+                </div>
+                <div className="p-2 rounded-full bg-red-100">
+                  <DollarSign className="w-5 h-5 text-red-600" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center">
+                <span className="text-sm text-red-600">{metrics.costs.change}</span>
+                <span className="text-sm text-gray-500 ml-2">vs last period</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Usage Analytics */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>API Usage Analytics</CardTitle>
+              <CardDescription>Real-time monitoring of API calls and token usage</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={apiUsage.data}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="time" />
+                    <YAxis yAxisId="left" />
+                    <YAxis yAxisId="right" orientation="right" />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Line yAxisId="left" type="monotone" dataKey="calls" stroke="#8884d8" name="API Calls" />
+                    <Line yAxisId="right" type="monotone" dataKey="tokens" stroke="#82ca9d" name="Tokens" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <p className="text-sm text-gray-500 mb-1">API Calls Today</p>
+                  <Progress value={(apiUsage.limits.current / apiUsage.limits.daily) * 100} className="h-2" />
+                  <p className="text-xs text-gray-400 mt-1">
+                    {apiUsage.limits.current.toLocaleString()} / {apiUsage.limits.daily.toLocaleString()}
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-gray-500 mb-1">Monthly Usage</p>
+                  <Progress value={(apiUsage.limits.current * 30 / apiUsage.limits.monthly) * 100} className="h-2" />
+                  <p className="text-xs text-gray-400 mt-1">
+                    {(apiUsage.limits.current * 30).toLocaleString()} / {apiUsage.limits.monthly.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Model Performance */}
+          <Card>
+            <CardHeader>
+              <CardTitle>AI Models</CardTitle>
+              <CardDescription>Active models and their usage</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {models.map(model => (
+                  <div key={model.id} className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="font-medium">{model.name}</span>
+                      <Badge variant={model.status === 'active' ? 'success' : 'secondary'}>
+                        {model.status}
+                      </Badge>
+                    </div>
+                    <Progress value={model.usage} className="h-2" />
+                    <div className="flex justify-between text-sm text-gray-500">
+                      <span>{model.usage}% usage</span>
+                      <span>{model.apiCalls.toLocaleString()} calls</span>
+                    </div>
+                  </div>
+                ))}
+                <Button className="w-full" variant="outline">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add New Model
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default Dashboard;
