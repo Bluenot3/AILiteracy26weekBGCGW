@@ -1,0 +1,1383 @@
+<html><head><base href="."><title>AI News Network</title><script src="https://cdn.tailwindcss.com"></script><style>
+:root {
+    --personality-serious: #ffffff;
+    --personality-silly: #fde047;
+    --personality-energetic: #86efac;
+    --personality-confused: #7dd3fc;
+    --personality-enraged: #ef4444;
+    --personality-dizzy: #c084fc; /* New dizzy personality color */
+    --personality-dramatic: #fb923c; /* Orange */
+    --personality-sarcastic: #f472b6; /* Pink */
+    --personality-professional: #94a3b8; /* Slate */
+    --personality-mysterious: #6366f1; /* Indigo */
+    --personality-somber: #9ca3af; /* Gray for somber mood */
+    --personality-eccentric: #f0abfc; /* Fuchsia */
+    --personality-philosophical: #818cf8; /* Light indigo */
+    --personality-poetic: #e879f9; /* Pink-purple */
+    --personality-analytical: #67e8f9; /* Cyan */
+    --personality-embarrassed: #fb7185; /* Rose */
+    --personality-dullwitted: #94a3b8; /* Slate */
+    --personality-intelligent: #22d3ee; /* Cyan */
+    --personality-sleepy: #a78bfa; /* Purple */
+    --personality-spooky: #2d3748; /* Spooky personality color */
+    --personality-sad: #9ca3af; /* Gray for sad personality */
+    --personality-jolly: #f87171; /* Red for jolly personality */
+    --personality-crazy: #ff69b4; /* Hot pink */
+    --personality-annoying: #ff6b6b; /* Coral red */
+    --personality-weird: #a78bfa; /* Purple */
+    --personality-socially-awkward: #8ecae6; /* Light blue */
+}
+
+.dark {
+    --personality-serious: #ffffff;
+    --personality-silly: #facc15;
+    --personality-energetic: #4ade80;
+    --personality-confused: #38bdf8;
+    --personality-enraged: #dc2626;
+    --personality-dizzy: #a855f7; /* New dizzy personality color for dark mode */
+    --personality-dramatic: #f97316; /* Darker orange */
+    --personality-sarcastic: #ec4899; /* Darker pink */
+    --personality-professional: #64748b; /* Darker slate */
+    --personality-mysterious: #4f46e5; /* Darker indigo */
+    --personality-somber: #6b7280; /* Darker gray for somber mood in dark mode */
+    --personality-eccentric: #d946ef;
+    --personality-philosophical: #6366f1;
+    --personality-poetic: #d946ef;
+    --personality-analytical: #22d3ee;
+    --personality-embarrassed: #f43f5e;
+    --personality-dullwitted: #64748b;
+    --personality-intelligent: #06b6d4;
+    --personality-sleepy: #8b5cf6;
+    --personality-spooky: #1a202c; /* Spooky personality color for dark mode */
+    --personality-crazy: #ff1493; /* Deeper hot pink */
+    --personality-annoying: #ff4d4d; /* Darker coral red */
+    --personality-weird: #9461fb; /* Darker purple */
+    --personality-socially-awkward: #67a9d9; /* Darker light blue */
+}
+
+.news-desk {
+    background: linear-gradient(180deg, #1a365d 0%, #2d3748 100%);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+
+.dark .news-desk {
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+}
+
+.reporter {
+    transition: transform 0.3s ease;
+}
+
+.reporter.speaking {
+    transform: scale(1.05);
+}
+
+@keyframes newsAlert {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.breaking-news {
+    animation: newsAlert 2s infinite;
+}
+
+.context-menu {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(0,0,0,0.1);
+    transform-origin: top left;
+    animation: menuPop 0.2s ease-out;
+    z-index: 1000;
+    min-width: 200px;
+    max-height: 80vh; /* Limit height to 80% of viewport height */
+    overflow-y: auto; /* Enable vertical scrolling */
+    scroll-behavior: smooth; /* Add smooth scrolling to the menu */
+}
+
+.context-menu::-webkit-scrollbar {
+    width: 8px;
+}
+
+.context-menu::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.05);
+    border-radius: 4px;
+}
+
+.context-menu::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.2);
+    border-radius: 4px;
+}
+
+.dark .context-menu::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.05);
+}
+
+.dark .context-menu::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.2);
+}
+
+.context-menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.dark .context-menu-header {
+    border-color: #475569;
+}
+
+.context-menu-close {
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #f3f4f6;
+    transition: background 0.2s;
+}
+
+.context-menu-close:hover {
+    background: #e5e7eb;
+}
+
+.dark .context-menu-close {
+    background: #374151;
+    color: #e5e7eb;
+}
+
+.dark .context-menu-close:hover {
+    background: #4b5563;
+}
+
+.context-menu-item {
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 6px;
+    margin: 2px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.context-menu-item:hover {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.context-menu-item:hover::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 2px;
+    background: currentColor;
+    animation: slideIn 0.2s ease-out;
+}
+
+.context-menu-item[data-personality="serious"]::before {
+    background-color: var(--personality-serious);
+    border: 1px solid #ccc;
+}
+
+.context-menu-item[data-personality="silly"]::before {
+    background-color: var(--personality-silly);
+}
+
+.context-menu-item[data-personality="energetic"]::before {
+    background-color: var(--personality-energetic);
+}
+
+.context-menu-item[data-personality="confused"]::before {
+    background-color: var(--personality-confused);
+}
+
+.context-menu-item[data-personality="enraged"]::before {
+    background-color: var(--personality-enraged);
+}
+
+.context-menu-item[data-personality="dizzy"]::before {
+    background-color: var(--personality-dizzy);
+}
+
+.context-menu-item[data-personality="somber"]::before {
+    background-color: var(--personality-somber);
+}
+
+.context-menu-item[data-personality="dramatic"]::before {
+    background-color: var(--personality-dramatic);
+}
+
+.context-menu-item[data-personality="sarcastic"]::before {
+    background-color: var(--personality-sarcastic);
+}
+
+.context-menu-item[data-personality="professional"]::before {
+    background-color: var(--personality-professional);
+}
+
+.context-menu-item[data-personality="mysterious"]::before {
+    background-color: var(--personality-mysterious);
+}
+
+/* New personality styles */
+.context-menu-item[data-personality="eccentric"]::before {
+    background-color: var(--personality-eccentric);
+}
+
+.context-menu-item[data-personality="philosophical"]::before {
+    background-color: var(--personality-philosophical);
+}
+
+.context-menu-item[data-personality="poetic"]::before {
+    background-color: var(--personality-poetic);
+}
+
+.context-menu-item[data-personality="analytical"]::before {
+    background-color: var(--personality-analytical);
+}
+
+.context-menu-item[data-personality="embarrassed"]::before {
+    background-color: var(--personality-embarrassed);
+}
+
+.context-menu-item[data-personality="dullwitted"]::before {
+    background-color: var(--personality-dullwitted);
+}
+
+.context-menu-item[data-personality="intelligent"]::before {
+    background-color: var(--personality-intelligent);
+}
+
+.context-menu-item[data-personality="sleepy"]::before {
+    background-color: var(--personality-sleepy);
+}
+
+.context-menu-item[data-personality="spooky"]::before {
+    background: linear-gradient(45deg, #2d3748 0%, #4a5568 100%);
+}
+
+.context-menu-item[data-personality="sad"]::before {
+    background-color: var(--personality-sad);
+}
+
+.context-menu-item[data-personality="jolly"]::before {
+    background-color: var(--personality-jolly);
+}
+
+.context-menu-item[data-personality="crazy"]::before {
+    background-color: var(--personality-crazy);
+}
+
+.context-menu-item[data-personality="annoying"]::before {
+    background-color: var(--personality-annoying);
+}
+
+.context-menu-item[data-personality="weird"]::before {
+    background-color: var(--personality-weird);
+}
+
+.context-menu-item[data-personality="socially-awkward"]::before {
+    background-color: var(--personality-socially-awkward);
+}
+
+.context-menu-separator {
+    height: 1px;
+    background-color: #e2e8f0;
+    margin: 8px 0;
+}
+
+.dark .context-menu-separator {
+    background-color: #475569;
+}
+
+.dark .bg-gray-100 {
+    background-color: #1a1a1a;
+}
+
+.context-menu-name-edit {
+    padding: 8px;
+}
+
+.context-menu-name-edit input {
+    width: 100%;
+    padding: 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-top: 4px;
+}
+
+.context-menu-separator-text {
+    position: relative;
+    text-align: center;
+    padding: 8px 0;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.dark .context-menu-separator-text {
+    color: #9ca3af;
+}
+
+@keyframes menuPop {
+    0% { transform: scale(0.95); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.story-length-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.story-length-btn.selected {
+    background-color: #3b82f6;
+    color: white;
+    border-color: #2563eb;
+}
+
+.dark .story-length-btn {
+    color: #e5e7eb;
+    border-color: #4b5563;
+}
+
+.dark .story-length-btn.selected {
+    background-color: #2563eb;
+    border-color: #3b82f6;
+}
+
+.story-length-btn:hover::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 2px;
+    background: currentColor;
+    animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+}
+
+.mobile-view .news-desk {
+    padding: 10px;
+}
+
+.mobile-view .reporter svg {
+    width: 80px;
+    height: 80px;
+}
+
+.mobile-view .news-desk .flex {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+.mobile-view .reporter {
+    margin: 5px;
+}
+
+.mobile-view #newsDialog {
+    font-size: 14px;
+}
+
+@keyframes secretDiscovered {
+    0% { opacity: 0; transform: scale(0.8); }
+    20% { opacity: 1; transform: scale(1.1); }
+    80% { opacity: 1; transform: scale(1.1); }
+    100% { opacity: 0; transform: scale(1.2); }
+}
+
+.secret-discovered {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(45deg, #f59e0b, #ef4444, #8b5cf6, #3b82f6);
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.secret-discovered.active {
+    animation: secretDiscovered 3s ease-in-out forwards;
+}
+
+@keyframes secretDiscovered {
+    0% { opacity: 0; transform: scale(0.8); }
+    20% { opacity: 1; transform: scale(1.1); }
+    80% { opacity: 1; transform: scale(1.1); }
+    100% { opacity: 0; transform: scale(1.2); }
+}
+</style></head><body class="bg-gray-100 dark:bg-gray-900 p-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-blue-800 dark:text-blue-400">AI News Network</h1>
+            <div class="text-red-600 dark:text-red-500 font-bold text-xl breaking-news">BREAKING NEWS</div>
+        </div>
+
+        <div class="flex justify-end gap-4 mb-4">
+            <button onclick="addReporter()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors" id="addReporterBtn">
+                Add Reporter
+            </button>
+            <button onclick="removeReporter()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors" id="removeReporterBtn">
+                Remove Reporter
+            </button>
+            <button onclick="showSettings()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors">
+                ⚙️ Settings
+            </button>
+        </div>
+
+        <div class="mb-6">
+            <input type="text" id="prompt" placeholder="Enter your news story prompt..." class="w-full p-3 rounded border-2 border-blue-300 focus:border-blue-500 focus:outline-none text-lg">
+            <div class="flex gap-4 mt-3">
+                <label class="text-gray-700 dark:text-gray-300">Story Length:</label>
+                <div class="flex gap-2">
+                    <button onclick="setStoryLength('short')" class="story-length-btn px-3 py-1 rounded border-2 border-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors" data-length="short">
+                        Short
+                    </button>
+                    <button onclick="setStoryLength('medium')" class="story-length-btn px-3 py-1 rounded border-2 border-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors selected" data-length="medium">
+                        Medium
+                    </button>
+                    <button onclick="setStoryLength('lengthy')" class="story-length-btn px-3 py-1 rounded border-2 border-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors" data-length="lengthy">
+                        Lengthy
+                    </button>
+                    <button onclick="setStoryLength('long')" class="story-length-btn px-3 py-1 rounded border-2 border-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors" data-length="long">
+                        Long
+                    </button>
+                    <button onclick="setStoryLength('very-long')" class="story-length-btn px-3 py-1 rounded border-2 border-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors" data-length="very-long">
+                        Very Long
+                    </button>
+                    <button onclick="setStoryLength('marathon')" class="story-length-btn px-3 py-1 rounded border-2 border-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors" data-length="marathon">
+                        Marathon
+                    </button>
+                    <button onclick="setStoryLength('marathon-plus')" class="story-length-btn px-3 py-1 rounded border-2 border-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors" data-length="marathon-plus">
+                        Marathon+
+                    </button>
+                </div>
+            </div>
+            <button onclick="generateNews()" class="mt-3 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors">
+                Generate News Story
+            </button>
+        </div>
+
+        <div class="news-desk text-white p-6 mb-6">
+            <div class="flex justify-between items-center mb-6">
+                <div class="reporter" id="reporter1" data-personality="serious" data-face-color="#FFD700" data-body-color="#2B6CB0">
+                    <svg width="100" height="100" viewBox="0 0 100 100">
+                        <circle cx="50" cy="40" r="25" fill="#FFD700"></circle>
+                        <path d="M50 70 Q50 85 50 100 L20 100 Q35 85 35 70" fill="#2B6CB0"></path>
+                        <circle cx="42" cy="35" r="3" fill="black"></circle>
+                        <circle cx="58" cy="35" r="3" fill="black"></circle>
+                        <path d="M40 45 Q50 50 60 45" fill="none" stroke="black" stroke-width="2"></path>
+                    </svg>
+                    <div class="text-center font-bold">Tom</div>
+                </div>
+                <div class="reporter" id="reporter2" data-personality="silly" data-face-color="#FFA07A" data-body-color="#38A169">
+                    <svg width="100" height="100" viewBox="0 0 100 100">
+                        <circle cx="50" cy="40" r="25" fill="#FFA07A"></circle>
+                        <path d="M50 70 Q50 85 50 100 L20 100 Q35 85 35 70" fill="#38A169"></path>
+                        <circle cx="42" cy="35" r="3" fill="black"></circle>
+                        <circle cx="58" cy="35" r="3" fill="black"></circle>
+                        <path d="M40 45 Q50 55 60 45" fill="none" stroke="black" stroke-width="2"></path>
+                    </svg>
+                    <div class="text-center font-bold">Jerry</div>
+                </div>
+            </div>
+            <div id="newsDialog" class="bg-gray-800 p-4 rounded-lg min-h-[200px]">
+                <p class="text-center text-gray-400">Enter a prompt to generate your news story...</p>
+            </div>
+        </div>
+        <div class="text-center text-gray-600 dark:text-gray-400 text-sm">
+            Pro tip: Right-click on a reporter's face to change their personality!
+        </div>
+        <div class="fixed bottom-4 right-4 flex flex-col gap-2">
+            <button onclick="toggleViewMode()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
+                <span id="viewModeIcon">📱</span> View Mode
+            </button>
+            <button onclick="showCredits()" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 transition-colors">
+                ℹ️ Credits
+            </button>
+        </div>
+
+        <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-md w-full m-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Settings</h2>
+                    <button onclick="hideSettings()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-700 dark:text-gray-300">Dark Mode</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="darkModeToggle" class="sr-only peer" onchange="toggleDarkMode()">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                    <div class="space-y-2">
+                        <span class="text-gray-700 dark:text-gray-300">Music Volume</span>
+                        <div class="flex items-center gap-2">
+                            <input type="range" id="volumeSlider" min="0" max="100" value="50" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
+                            <span id="volumeValue" class="text-gray-700 dark:text-gray-300 min-w-[3ch]">50%</span>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <span class="text-gray-700 dark:text-gray-300">Click Sound Volume</span>
+                        <div class="flex items-center gap-2">
+                            <input type="range" id="clickVolumeSlider" min="0" max="100" value="50" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
+                            <span id="clickVolumeValue" class="text-gray-700 dark:text-gray-300 min-w-[3ch]">50%</span>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <span class="text-gray-700 dark:text-gray-300">Off-topic Chance</span>
+                        <div class="flex items-center gap-2">
+                            <input type="range" id="offTopicSlider" min="0" max="100" value="0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
+                            <span id="offTopicValue" class="text-gray-700 dark:text-gray-300 min-w-[3ch]">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="contextMenu" class="context-menu" style="display: none;">
+        <div class="context-menu-header">
+            <span>Customize Reporter</span>
+            <button class="context-menu-close" onclick="closeContextMenu()">✕</button>
+        </div>
+        <div class="context-menu-name-edit">
+            <input type="text" placeholder="Enter new name..." class="name-input">
+        </div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-color-edit">
+            <div class="mb-2">
+                <label class="block text-sm mb-1">Face Color</label>
+                <input type="color" class="face-color-input w-full h-8" value="#FFD700">
+            </div>
+            <div class="mb-2">
+                <label class="block text-sm mb-1">Body Color</label>
+                <input type="color" class="body-color-input w-full h-8" value="#2B6CB0">
+            </div>
+        </div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-separator-text">Standard Personalities</div>
+        <div class="context-menu-item" data-personality="serious">Serious</div>
+        <div class="context-menu-item" data-personality="silly">Silly</div>
+        <div class="context-menu-item" data-personality="energetic">Energetic</div>
+        <div class="context-menu-item" data-personality="confused">Confused</div>
+        <div class="context-menu-item" data-personality="enraged">Enraged</div>
+        <div class="context-menu-item" data-personality="dizzy">Dizzy</div>
+        <div class="context-menu-item" data-personality="somber">Somber</div>
+        <div class="context-menu-item" data-personality="sad">Sad</div>
+        <div class="context-menu-item" data-personality="embarrassed">Embarrassed</div>
+        <div class="context-menu-item" data-personality="dullwitted">Dull-witted</div>
+        <div class="context-menu-item" data-personality="intelligent">Intelligent</div>
+        <div class="context-menu-item" data-personality="sleepy">Sleepy</div>
+        <div class="context-menu-item" data-personality="crazy">Crazy</div>
+        <div class="context-menu-item" data-personality="annoying">Annoying</div>
+        <div class="context-menu-item" data-personality="weird">Weird</div>
+        <div class="context-menu-item" data-personality="socially-awkward">Socially Awkward</div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-separator-text">AI Personalities</div>
+        <div class="context-menu-item" data-personality="dramatic">Dramatic</div>
+        <div class="context-menu-item" data-personality="sarcastic">Sarcastic</div>
+        <div class="context-menu-item" data-personality="professional">Professional</div>
+        <div class="context-menu-item" data-personality="mysterious">Mysterious</div>
+        <div class="context-menu-item" data-personality="eccentric">Eccentric</div>
+        <div class="context-menu-item" data-personality="philosophical">Philosophical</div>
+        <div class="context-menu-item" data-personality="poetic">Poetic</div>
+        <div class="context-menu-item" data-personality="analytical">Analytical</div>
+        <div class="context-menu-item" data-personality="spooky">Spooky</div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-separator-text">Secret Personalities</div>
+        <div id="secretPersonalitiesSection">
+            <!-- Secret personalities will be added here dynamically -->
+        </div>
+        <div class="context-menu-separator-text">Personality Descriptions</div>
+        <div class="personality-descriptions" style="padding: 8px; max-height: 200px; overflow-y: auto;">
+            <div class="description-item">
+                <strong>Standard Personalities:</strong>
+                <p>Serious - Professional and straightforward delivery</p>
+                <p>Silly - Adds giggles and jokes randomly</p>
+                <p>Energetic - High energy, excited delivery</p>
+                <p>Confused - Uncertain, questioning tone</p>
+                <p>Enraged - Angry, intense delivery</p>
+                <p>Dizzy - Disoriented speech patterns</p>
+                <p>Somber - Sad, melancholic tone</p>
+                <p>Sad - Depressed, downcast delivery</p>
+                <p>Embarrassed - Shy, hesitant speech</p>
+                <p>Dull-witted - Slow, simple delivery</p>
+                <p>Intelligent - Sharp, articulate speech</p>
+                <p>Sleepy - Drowsy, yawning delivery</p>
+                <p>Crazy - Wild, unpredictable behavior</p>
+                <p>Annoying - Irritating, bothersome style</p>
+                <p>Weird - Strange, unusual delivery</p>
+                <p>Socially Awkward - Uncomfortable social interactions</p>
+            </div>
+            <div class="description-item">
+                <strong>AI Personalities:</strong>
+                <p>Dramatic - Theatrical, over-the-top delivery</p>
+                <p>Sarcastic - Witty, ironic comments</p>
+                <p>Professional - Polished, broadcast style</p>
+                <p>Mysterious - Cryptic, enigmatic tone</p>
+                <p>Eccentric - Quirky, unique behavior</p>
+                <p>Philosophical - Deep, thoughtful analysis</p>
+                <p>Poetic - Lyrical, artistic delivery</p>
+                <p>Analytical - Logical, detailed reporting</p>
+            </div>
+        </div>
+        <div class="context-menu-separator"></div>
+        <div class="custom-personality-section" style="padding: 8px;">
+            <h3 class="text-lg font-bold mb-2">Create Custom Personality</h3>
+            <input type="text" class="custom-personality-name w-full p-2 mb-2 border rounded" placeholder="Personality Name">
+            <textarea class="custom-personality-desc w-full p-2 mb-2 border rounded" rows="3" placeholder="Describe how this personality should act and speak..."></textarea>
+            <button onclick="saveCustomPersonality()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Save Custom Personality</button>
+        </div>
+    </div>
+
+    <div class="secret-discovered">
+        <h2>Secret Personality Discovered! 🎉</h2>
+    </div>
+
+    <div id="creditsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-md w-full m-4">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Credits</h2>
+            <div class="text-gray-600 dark:text-gray-300">
+                <p class="mb-2">AI News Network</p>
+                <p class="mb-2">Created by: Chaosinanutshell</p>
+                <p class="mb-2">AI News Network was inspired by <a href="https://websim.ai/p/uytt7i7qxwv5henck2z9/97" class="text-blue-500 hover:text-blue-700">Silly Stories</a> by <a href="https://websim.ai/@Dex" class="text-purple-500 hover:text-purple-700">@dex</a></p>
+                <p class="mb-2">Want to see more from Chaosinanutshell? Check out my <a href="https://websim.ai/@Chaosinanutshell" class="text-purple-700 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300 font-bold">Profile</a>!</p>
+                <p class="mb-2">Frank idea by <a href="https://websim.ai/@Gooey54" class="text-green-500 hover:text-green-600 dark:text-green-400 dark:hover:text-green-300">@gooey24</a></p>
+                <p class="mb-2">Off-topic setting idea by <a href="https://websim.ai/@Gooey54" class="text-green-500 hover:text-green-600 dark:text-green-400 dark:hover:text-green-300">@gooey24</a></p>
+                <p class="mb-2">Version: 4.0</p>
+                <p class="text-red-500 font-bold">HOLY CRAP, I JUST CAME BACK TO THIS SITE, THANK YOU ALL FOR SO MANY LIKES!!!</p>
+            </div>
+            <button onclick="hideCredits()" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let offTopicChance = 0;
+
+        let backgroundMusic = new Audio('/CalmbeforeHATRED.mp3');
+        backgroundMusic.loop = true;
+        backgroundMusic.volume = 0.5;
+
+        let clickSound = new Audio('/click.wav');
+        clickSound.volume = 0.5;
+
+        // Add function to handle music
+        function handleBackgroundMusic(isSpeaking = false) {
+            const baseVolume = document.getElementById('volumeSlider').value / 100;
+            if (isSpeaking) {
+                backgroundMusic.volume = baseVolume * 0.2; // Lower to 20% of set volume during news
+            } else {
+                backgroundMusic.volume = baseVolume; // Restore to set volume
+            }
+        }
+
+        function playClick() {
+            clickSound.currentTime = 0;
+            clickSound.play();
+        }
+
+        let reporterCount = 2;
+        let reporters = {
+            reporter1: { name: 'Tom', personality: 'serious', faceColor: '#FFD700', bodyColor: '#2B6CB0' },
+            reporter2: { name: 'Jerry', personality: 'silly', faceColor: '#FFA07A', bodyColor: '#38A169' }
+        };
+
+        let currentStoryLength = 'medium';
+        let isMobileView = false;
+        let customPersonalities = [];
+
+        function addReporter() {
+            playClick();
+            if (reporterCount >= 4) return;
+            
+            reporterCount++;
+            const reporterId = `reporter${reporterCount}`;
+            const reporterName = getDefaultReporterName(reporterCount);
+            
+            const reporterDiv = document.createElement('div');
+            reporterDiv.className = 'reporter';
+            reporterDiv.id = reporterId;
+            reporterDiv.setAttribute('data-personality', 'serious');
+            reporterDiv.setAttribute('data-face-color', '#FFD700');
+            reporterDiv.setAttribute('data-body-color', '#2B6CB0');
+            
+            reporterDiv.innerHTML = `
+                <svg width="100" height="100" viewBox="0 0 100 100">
+                    <circle cx="50" cy="40" r="25" fill="#FFD700"/>
+                    <path d="M50 70 Q50 85 50 100 L20 100 Q35 85 35 70" fill="#2B6CB0"/>
+                    <circle cx="42" cy="35" r="3" fill="black"/>
+                    <circle cx="58" cy="35" r="3" fill="black"/>
+                    <path d="M40 45 Q50 50 60 45" fill="none" stroke="black" stroke-width="2"/>
+                </svg>
+                <div class="text-center font-bold">${reporterName}</div>
+            `;
+            
+            document.querySelector('.news-desk .flex').appendChild(reporterDiv);
+            reporters[reporterId] = { name: reporterName, personality: 'serious', faceColor: '#FFD700', bodyColor: '#2B6CB0' };
+            
+            if (reporterCount >= 4) {
+                document.getElementById('addReporterBtn').disabled = true;
+                document.getElementById('addReporterBtn').classList.add('opacity-50');
+            }
+        }
+
+        function getDefaultReporterName(count) {
+            switch(count) {
+                case 3: return 'Butch';
+                case 4: return 'Frank';
+                default: return `Reporter ${count}`;
+            }
+        }
+
+        function saveCustomPersonality() {
+            const name = document.querySelector('.custom-personality-name').value.trim();
+            const description = document.querySelector('.custom-personality-desc').value.trim();
+            
+            if (!name || !description) {
+                alert('Please provide both a name and description');
+                return;
+            }
+            
+            const personality = {
+                name: name,
+                description: description,
+                id: 'custom-' + Date.now()
+            };
+            
+            customPersonalities.push(personality);
+            addCustomPersonalityToMenu(personality);
+            
+            // Clear inputs
+            document.querySelector('.custom-personality-name').value = '';
+            document.querySelector('.custom-personality-desc').value = '';
+        }
+
+        function addCustomPersonalityToMenu(personality) {
+            const section = document.getElementById('secretPersonalitiesSection');
+            const option = document.createElement('div');
+            option.className = 'context-menu-item';
+            option.setAttribute('data-personality', personality.id);
+            option.setAttribute('title', personality.description);
+            option.textContent = personality.name;
+            
+            option.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const reporterId = document.getElementById('contextMenu').getAttribute('data-target');
+                const reporter = document.getElementById(reporterId);
+                reporter.setAttribute('data-personality', personality.id);
+                reporters[reporterId].personality = personality.id;
+                reporters[reporterId].customDescription = personality.description;
+                closeContextMenu();
+                showSecretDiscovery(); // Call the new function to show discovery
+            });
+            
+            section.appendChild(option);
+        }
+
+        function showSecretDiscovery() {
+            const discoveryElement = document.querySelector('.secret-discovered');
+            discoveryElement.classList.add('active');
+            
+            // Remove the active class after animation completes
+            setTimeout(() => {
+                discoveryElement.classList.remove('active');
+            }, 3000); // 3 seconds matches the CSS animation duration
+        }
+
+        async function generateNews() {
+            playClick();
+            const prompt = document.getElementById('prompt').value;
+            if (!prompt) {
+                document.getElementById('newsDialog').innerHTML = '<p class="text-center text-yellow-500">Please enter a news story prompt first.</p>';
+                return;
+            }
+
+            const newsDialog = document.getElementById('newsDialog');
+            newsDialog.innerHTML = '<p class="text-center">📰 Generating news story...</p>';
+
+            try {
+                const reporterConfig = Object.entries(reporters)
+                    .map(([_, reporter]) => {
+                        if (reporter.personality.startsWith('custom-')) {
+                            return `${reporter.name}'s personality is custom: ${reporter.customDescription}`;
+                        }
+                        return `${reporter.name}'s personality is: ${reporter.personality}`;
+                    })
+                    .join('\n');
+
+                const lengthConfig = {
+                    'short': '2-3 exchanges',
+                    'medium': '4-5 exchanges',
+                    'lengthy': '5-6 exchanges',
+                    'long': '6-8 exchanges',
+                    'very-long': '9-12 exchanges',
+                    'marathon': '15-20 exchanges',
+                    'marathon-plus': '25-30 exchanges'
+                };
+
+                const offTopicConfig = offTopicChance > 0 ? 
+                    `Reporters have a ${offTopicChance}% chance to go off-topic or add personal anecdotes to their responses.` : 
+                    'Reporters should stay focused on the news story.';
+
+                const response = await fetch('/api/ai_completion', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        prompt: `Create a ${currentStoryLength} news dialogue between ${reporterCount} news anchors.
+                                Make it ${lengthConfig[currentStoryLength]}.
+                                The first line must be ${reporters.reporter1.name} saying "Breaking News!". 
+                                Then continue with the story about: "${prompt}".
+                                ${reporterConfig}
+                                ${offTopicConfig}
+                                
+                                Format each line of dialogue as:
+                                {
+                                    "speaker": "[reporter name]",
+                                    "text": "[dialogue text]",
+                                    "mood": "neutral"
+                                }
+                                
+                                <typescript-interface>
+                                interface DialogueLine {
+                                    speaker: string;
+                                    text: string;
+                                    mood: string;
+                                }
+                                
+                                interface Response {
+                                    dialogue: DialogueLine[];
+                                }
+                                </typescript-interface>
+                                
+                                <example-response>
+                                {
+                                    "dialogue": [
+                                        {
+                                            "speaker": "Tom",
+                                            "text": "Breaking News!",
+                                            "mood": "excited"
+                                        }
+                                    ]
+                                }
+                                </example-response>`,
+                        data: prompt
+                    })
+                });
+
+                const data = await response.json();
+                
+                // Ensure we have valid dialogue data
+                if (!data || !data.dialogue || !Array.isArray(data.dialogue)) {
+                    throw new Error('Invalid dialogue format received');
+                }
+
+                // Add fallback/default dialogue if empty
+                if (data.dialogue.length === 0) {
+                    data.dialogue = [{
+                        speaker: reporters.reporter1.name,
+                        text: "Breaking News! " + prompt,
+                        mood: "neutral"
+                    }];
+                }
+
+                await displayNewsDialogue(data.dialogue);
+
+            } catch (error) {
+                console.error('Error:', error);
+                newsDialog.innerHTML = `
+                    <p class="text-center text-red-500">
+                        We're experiencing technical difficulties. Please try again in a moment.
+                    </p>`;
+            }
+        }
+
+        async function displayNewsDialogue(dialogue) {
+            const newsDialog = document.getElementById('newsDialog');
+            newsDialog.innerHTML = '';
+            
+            handleBackgroundMusic(true); // Lower volume for news
+
+            // Validate dialogue
+            if (!dialogue || !Array.isArray(dialogue)) {
+                dialogue = [{
+                    speaker: reporters.reporter1.name,
+                    text: "Breaking News! We're experiencing technical difficulties.",
+                    mood: "neutral"
+                }];
+            }
+
+            for (const line of dialogue) {
+                if (!line || !line.speaker || !line.text) continue;
+
+                // Clear previous speaking states
+                document.querySelectorAll('.reporter').forEach(rep => rep.classList.remove('speaking'));
+
+                // Find matching reporter
+                const reporterElement = Object.entries(reporters).find(([_, r]) => r.name === line.speaker)?.[0];
+                const reporter = reporterElement ? document.getElementById(reporterElement) : null;
+
+                if (reporter) {
+                    reporter.classList.add('speaking');
+                    const personality = reporter.getAttribute('data-personality') || 'serious';
+
+                    if (personality === 'silly') {
+                        line.text = addSillyQuirks(line.text);
+                    }
+
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'mb-4';
+                    messageDiv.style.color = `var(--personality-${personality})`;
+                    messageDiv.innerHTML = `<strong>${line.speaker}:</strong> ${line.text}`;
+                    newsDialog.appendChild(messageDiv);
+
+                    try {
+                        await speakText(line.text, reporter.id !== 'reporter1');
+                    } catch (error) {
+                        console.error('Speech synthesis error:', error);
+                    }
+
+                    newsDialog.scrollTop = newsDialog.scrollHeight;
+                }
+            }
+
+            // After dialogue finishes
+            handleBackgroundMusic(false); // Restore volume
+
+            // Clear speaking states at end
+            document.querySelectorAll('.reporter').forEach(rep => rep.classList.remove('speaking'));
+        }
+
+        let tomVoice = null;
+        let jerryVoice = null;
+
+        function setVoices() {
+            const voices = speechSynthesis.getVoices();
+            tomVoice = voices[0];
+            jerryVoice = voices[1] || voices[0];
+        }
+
+        speechSynthesis.onvoiceschanged = setVoices;
+        setVoices();
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
+            // Update the toggle in settings if it's open
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            if (darkModeToggle) {
+                darkModeToggle.checked = document.documentElement.classList.contains('dark');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.documentElement.classList.add('dark');
+            }
+            backgroundMusic.play().catch(e => console.log('Audio autoplay blocked by browser'));
+
+            // Volume control
+            const volumeSlider = document.getElementById('volumeSlider');
+            const volumeValue = document.getElementById('volumeValue');
+            
+            volumeSlider.addEventListener('input', (e) => {
+                const volume = e.target.value;
+                backgroundMusic.volume = volume / 100;
+                volumeValue.textContent = `${volume}%`;
+            });
+
+            // Click sound volume control
+            const clickVolumeSlider = document.getElementById('clickVolumeSlider');
+            const clickVolumeValue = document.getElementById('clickVolumeValue');
+            
+            clickVolumeSlider.addEventListener('input', (e) => {
+                const volume = e.target.value;
+                clickSound.volume = volume / 100;
+                clickVolumeValue.textContent = `${volume}%`;
+            });
+
+            // Off-topic chance control
+            const offTopicSlider = document.getElementById('offTopicSlider');
+            const offTopicValue = document.getElementById('offTopicValue');
+            
+            offTopicSlider.addEventListener('input', (e) => {
+                offTopicChance = parseInt(e.target.value);
+                offTopicValue.textContent = `${offTopicChance}%`;
+            });
+        });
+
+        document.addEventListener('contextmenu', function(e) {
+            const reporter = e.target.closest('.reporter');
+            if (reporter) {
+                e.preventDefault();
+                const contextMenu = document.getElementById('contextMenu');
+                contextMenu.style.display = 'block';
+                contextMenu.style.left = e.pageX + 'px';
+                contextMenu.style.top = e.pageY + 'px';
+                contextMenu.setAttribute('data-target', reporter.id);
+                
+                // Set the current name in the input
+                const nameInput = contextMenu.querySelector('.name-input');
+                const currentName = reporter.querySelector('.font-bold').textContent;
+                nameInput.value = currentName;
+
+                // Update selected personality
+                const currentPersonality = reporter.getAttribute('data-personality');
+                document.querySelectorAll('.context-menu-item').forEach(item => {
+                    item.classList.remove('selected');
+                    if (item.getAttribute('data-personality') === currentPersonality) {
+                        item.classList.add('selected');
+                    }
+                });
+
+                // Set current face and body colors
+                const faceColorInput = contextMenu.querySelector('.face-color-input');
+                const bodyColorInput = contextMenu.querySelector('.body-color-input');
+                faceColorInput.value = reporter.getAttribute('data-face-color');
+                bodyColorInput.value = reporter.getAttribute('data-body-color');
+            }
+        });
+
+        document.querySelector('.face-color-input').addEventListener('change', function(e) {
+            const reporterId = document.getElementById('contextMenu').getAttribute('data-target');
+            const reporter = document.getElementById(reporterId);
+            const faceCircle = reporter.querySelector('svg circle:first-child');
+            reporter.setAttribute('data-face-color', e.target.value);
+            faceCircle.setAttribute('fill', e.target.value);
+            reporters[reporterId].faceColor = e.target.value;
+        });
+
+        document.querySelector('.body-color-input').addEventListener('change', function(e) {
+            const reporterId = document.getElementById('contextMenu').getAttribute('data-target');
+            const reporter = document.getElementById(reporterId);
+            const bodyPath = reporter.querySelector('svg path:first-of-type');
+            reporter.setAttribute('data-body-color', e.target.value);
+            bodyPath.setAttribute('fill', e.target.value);
+            reporters[reporterId].bodyColor = e.target.value;
+        });
+
+        function closeContextMenu() {
+            document.getElementById('contextMenu').style.display = 'none';
+        }
+
+        document.querySelectorAll('.context-menu-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.stopPropagation(); // Prevent event bubbling
+                const personality = this.getAttribute('data-personality');
+                const reporterId = document.getElementById('contextMenu').getAttribute('data-target');
+                const reporter = document.getElementById(reporterId);
+                
+                // Update the reporter's personality in both the DOM and reporters object
+                reporter.setAttribute('data-personality', personality);
+                reporters[reporterId].personality = personality;
+                
+                document.querySelectorAll('.context-menu-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                this.classList.add('selected');
+                
+                closeContextMenu();
+            });
+        });
+
+        document.querySelector('.name-input').addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent event bubbling
+        });
+
+        document.querySelector('.name-input').addEventListener('change', function(e) {
+            const reporterId = document.getElementById('contextMenu').getAttribute('data-target');
+            const reporter = document.getElementById(reporterId);
+            const nameDiv = reporter.querySelector('.font-bold');
+            const newName = e.target.value.trim();
+            
+            if (newName) {
+                nameDiv.textContent = newName;
+                reporters[reporterId].name = newName; // Update the name in the reporters object
+                
+                // Check for secret personalities
+                const secretPersonalitiesSection = document.getElementById('secretPersonalitiesSection');
+                
+                // Check for Spooky personality unlock
+                if (newName.toLowerCase() === 'spooky' && !document.querySelector('[data-personality="spooky"]')) {
+                    const spookyOption = createSecretPersonalityOption('spooky', 'Spooky');
+                    secretPersonalitiesSection.appendChild(spookyOption);
+                    showSecretDiscovery();
+                }
+                
+                // Check for Jolly personality unlock
+                if (newName.toLowerCase() === 'santa' && !document.querySelector('[data-personality="jolly"]')) {
+                    const jollyOption = createSecretPersonalityOption('jolly', 'Jolly');
+                    secretPersonalitiesSection.appendChild(jollyOption);
+                    showSecretDiscovery();
+                }
+            }
+        });
+
+        function createSecretPersonalityOption(personality, label) {
+            const option = document.createElement('div');
+            option.className = 'context-menu-item';
+            option.setAttribute('data-personality', personality);
+            option.textContent = label;
+            
+            option.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const reporterId = document.getElementById('contextMenu').getAttribute('data-target');
+                const reporter = document.getElementById(reporterId);
+                reporter.setAttribute('data-personality', personality);
+                reporters[reporterId].personality = personality;
+                closeContextMenu();
+            });
+            
+            return option;
+        }
+
+        // Add silly personality speech patterns
+        function addSillyQuirks(text) {
+            const giggles = ['*giggles*', '*hehe*', '*teehee*', '*chuckles*'];
+            const jokes = [
+                ' That reminds me of a funny joke!',
+                ' Speaking of which, why did the newsroom cross the road?',
+                ' *starts telling dad joke*',
+                ' Is it just me or is this news extra silly today?'
+            ];
+            
+            if (Math.random() < 0.3) { // 30% chance to add giggle
+                text += ' ' + giggles[Math.floor(Math.random() * giggles.length)];
+            }
+            if (Math.random() < 0.2) { // 20% chance to add joke
+                text += jokes[Math.floor(Math.random() * jokes.length)];
+            }
+            return text;
+        }
+
+        function speakText(text, isJerry) {
+            return new Promise((resolve) => {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.voice = isJerry ? jerryVoice : tomVoice;
+                
+                const reporter = isJerry ? document.getElementById('reporter2') : document.getElementById('reporter1');
+                const personality = reporter.getAttribute('data-personality');
+                
+                switch(personality) {
+                    case 'serious':
+                        utterance.pitch = 0.8;
+                        utterance.rate = 0.9;
+                        break;
+                    case 'silly':
+                        utterance.pitch = 1.2;
+                        utterance.rate = 1.1;
+                        break;
+                    case 'energetic':
+                        utterance.pitch = 1.3;
+                        utterance.rate = 1.3;
+                        break;
+                    case 'confused':
+                        utterance.pitch = 1.1;
+                        utterance.rate = 0.8;
+                        break;
+                    case 'enraged':
+                        utterance.pitch = 1.4;
+                        utterance.rate = 1.4;
+                        break;
+                    case 'dizzy':
+                        utterance.pitch = 1.0;
+                        utterance.rate = 1.0;
+                        break;
+                    case 'somber':
+                        utterance.pitch = 0.8;
+                        utterance.rate = 0.7;
+                        break;
+                    case 'dramatic':
+                        utterance.pitch = 1.2;
+                        utterance.rate = 0.8;
+                        break;
+                    case 'sarcastic':
+                        utterance.pitch = 0.9;
+                        utterance.rate = 1.1;
+                        break;
+                    case 'professional':
+                        utterance.pitch = 1.0;
+                        utterance.rate = 0.95;
+                        break;
+                    case 'mysterious':
+                        utterance.pitch = 0.7;
+                        utterance.rate = 0.85;
+                        break;
+                    case 'eccentric':
+                        utterance.pitch = 1.3;
+                        utterance.rate = 1.2;
+                        break;
+                    case 'philosophical':
+                        utterance.pitch = 0.9;
+                        utterance.rate = 0.8;
+                        break;
+                    case 'poetic':
+                        utterance.pitch = 1.1;
+                        utterance.rate = 0.85;
+                        break;
+                    case 'analytical':
+                        utterance.pitch = 1.0;
+                        utterance.rate = 1.1;
+                        break;
+                    case 'embarrassed':
+                        utterance.pitch = 1.1;
+                        utterance.rate = 0.9;
+                        break;
+                    case 'dullwitted':
+                        utterance.pitch = 0.8;
+                        utterance.rate = 0.7;
+                        break;
+                    case 'intelligent':
+                        utterance.pitch = 1.0;
+                        utterance.rate = 1.1;
+                        break;
+                    case 'sleepy':
+                        utterance.pitch = 0.7;
+                        utterance.rate = 0.8;
+                        break;
+                    case 'spooky':
+                        utterance.pitch = 0.5;
+                        utterance.rate = 0.7;
+                        break;
+                    case 'sad':
+                        utterance.pitch = 0.7;
+                        utterance.rate = 0.7;
+                        break;
+                    case 'jolly':
+                        utterance.pitch = 1.3;
+                        utterance.rate = 1.1;
+                        break;
+                    case 'crazy':
+                        utterance.pitch = 1.4;
+                        utterance.rate = 1.5;
+                        break;
+                    case 'annoying':
+                        utterance.pitch = 1.5;
+                        utterance.rate = 1.2;
+                        break;
+                    case 'weird':
+                        utterance.pitch = 0.8;
+                        utterance.rate = 1.3;
+                        break;
+                    case 'socially-awkward':
+                        utterance.pitch = 0.9;
+                        utterance.rate = 0.85;
+                        break;
+                }
+                
+                utterance.onend = () => {
+                    resolve();
+                };
+                
+                speechSynthesis.speak(utterance);
+            });
+        }
+
+        function setStoryLength(length) {
+            playClick(); // Add this line
+            currentStoryLength = length;
+            // Update button styles
+            document.querySelectorAll('.story-length-btn').forEach(btn => {
+                btn.classList.remove('selected');
+                if (btn.getAttribute('data-length') === length) {
+                    btn.classList.add('selected');
+                }
+            });
+        }
+
+        function removeReporter() {
+            playClick();
+            if (reporterCount <= 0) return;
+            
+            const lastReporterId = `reporter${reporterCount}`;
+            const reporter = document.getElementById(lastReporterId);
+            
+            if (reporter) {
+                reporter.remove();
+                delete reporters[lastReporterId];
+                reporterCount--;
+                
+                document.getElementById('addReporterBtn').disabled = false;
+                document.getElementById('addReporterBtn').classList.remove('opacity-50');
+            }
+        }
+
+        function toggleViewMode() {
+            isMobileView = !isMobileView;
+            const container = document.querySelector('body > div:first-child');
+            const viewModeIcon = document.getElementById('viewModeIcon');
+            
+            if (!container || !viewModeIcon) {
+                console.error('Required elements not found');
+                return;
+            }
+
+            if (isMobileView) {
+                container.classList.remove('max-w-4xl');
+                container.classList.add('max-w-sm');
+                viewModeIcon.textContent = '💻';
+                document.body.classList.add('mobile-view');
+            } else {
+                container.classList.remove('max-w-sm');
+                container.classList.add('max-w-4xl');
+                viewModeIcon.textContent = '📱';
+                document.body.classList.remove('mobile-view');
+            }
+        }
+
+        function showCredits() {
+            playClick(); // Add this line
+            document.getElementById('creditsModal').classList.remove('hidden');
+        }
+
+        function hideCredits() {
+            document.getElementById('creditsModal').classList.add('hidden');
+        }
+
+        function showSettings() {
+            playClick(); // Add this line
+            document.getElementById('settingsModal').classList.remove('hidden');
+            // Set initial states
+            document.getElementById('darkModeToggle').checked = document.documentElement.classList.contains('dark');
+            const musicVolume = Math.round(backgroundMusic.volume * 100);
+            const clickVolume = Math.round(clickSound.volume * 100);
+            document.getElementById('volumeSlider').value = musicVolume;
+            document.getElementById('clickVolumeSlider').value = clickVolume;
+            document.getElementById('volumeValue').textContent = `${musicVolume}%`;
+            document.getElementById('clickVolumeValue').textContent = `${clickVolume}%`;
+            document.getElementById('offTopicSlider').value = offTopicChance;
+            document.getElementById('offTopicValue').textContent = `${offTopicChance}%`;
+        }
+
+        function hideSettings() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+    </script>
+</body></html>
