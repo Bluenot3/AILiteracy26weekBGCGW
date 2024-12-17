@@ -1,0 +1,309 @@
+<html><head><base href="." />
+<meta charset="UTF-8">
+<title>Christmas Memory Card Game</title>
+<style>
+  :root {
+    --card-width: 150px;
+    --card-height: 150px;
+  }
+
+  body {
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: radial-gradient(circle at center, #1a472a, #0a1f12);
+    font-family: 'Mountains of Christmas', cursive;
+    color: #fff;
+  }
+
+  .game-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    perspective: 1000px;
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  }
+
+  .card {
+    width: var(--card-width);
+    height: var(--card-height);
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+  }
+
+  .card:hover:not(.flipped):not(.matched) {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+  }
+
+  .card.flipped {
+    transform: rotateY(180deg);
+  }
+
+  .card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 15px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+  }
+
+  .card-front {
+    background: linear-gradient(135deg, #e6252c, #b91c22);
+    transform: rotateY(180deg);
+    padding: 20px;
+    border: 3px solid gold;
+  }
+
+  .card-back {
+    background: linear-gradient(45deg, #2c5530, #1a472a);
+    border: 3px solid gold;
+    box-shadow: inset 0 0 20px rgba(255, 215, 0, 0.2);
+  }
+
+  .card.matched {
+    animation: matchPulse 0.5s ease-in-out;
+  }
+
+  @keyframes matchPulse {
+    0% { transform: scale(1) rotateY(180deg); }
+    50% { transform: scale(1.1) rotateY(180deg); }
+    100% { transform: scale(1) rotateY(180deg); }
+  }
+
+  .card-back svg {
+    width: 80%;
+    height: 80%;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+  }
+
+  .stats {
+    font-size: 24px;
+    margin: 20px;
+    text-align: center;
+    background: rgba(255,255,255,0.1);
+    padding: 20px 40px;
+    border-radius: 15px;
+    backdrop-filter: blur(5px);
+    border: 2px solid rgba(255,255,255,0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  }
+
+  .stats div {
+    margin: 10px 0;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  .snow {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  @keyframes celebrate {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+
+  .win-animation {
+    animation: celebrate 0.5s ease-in-out;
+  }
+
+  .icon {
+    width: 100%;
+    height: 100%;
+    fill: #fff;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+  }
+
+  h1 {
+    text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    font-size: 3em;
+    margin-bottom: 30px;
+    text-align: center;
+  }
+
+  @keyframes snowfall {
+    0% {
+      transform: translateY(0) rotate(0deg);
+    }
+    100% {
+      transform: translateY(100vh) rotate(360deg);
+    }
+  }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<h1>🎄 Christmas Memory Game 🎄</h1>
+<div class="stats">
+  <div>Moves: <span id="moves">0</span></div>
+  <div>Matches: <span id="matches">0</span></div>
+  <div>Time: <span id="timer">0:00</span></div>
+</div>
+<div class="game-container" id="gameBoard"></div>
+<div class="snow" id="snow"></div>
+
+<script>
+const symbols = [
+  `<svg viewBox="0 0 24 24"><path class="icon" d="M12 2L9 9H15L12 2M12 22L15 15H9L12 22M2 12L9 15V9L2 12M22 12L15 9V15L22 12Z"/></svg>`,
+  `<svg viewBox="0 0 24 24"><path class="icon" d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6M12,8A4,4 0 0,0 8,12A4,4 0 0,0 12,16A4,4 0 0,0 16,12A4,4 0 0,0 12,8Z"/></svg>`,
+  `<svg viewBox="0 0 24 24"><path class="icon" d="M19,12L12,22L5,12L12,2"/></svg>`,
+  `<svg viewBox="0 0 24 24"><path class="icon" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/></svg>`,
+  `<svg viewBox="0 0 24 24"><path class="icon" d="M12,5.5A3.5,3.5 0 0,1 15.5,9A3.5,3.5 0 0,1 12,12.5A3.5,3.5 0 0,1 8.5,9A3.5,3.5 0 0,1 12,5.5M5,8C5.56,8 6.08,8.15 6.53,8.42C6.38,9.85 6.8,11.27 7.66,12.38C7.16,13.34 6.16,14 5,14A3,3 0 0,1 2,11A3,3 0 0,1 5,8M19,8A3,3 0 0,1 22,11A3,3 0 0,1 19,14C17.84,14 16.84,13.34 16.34,12.38C17.2,11.27 17.62,9.85 17.47,8.42C17.92,8.15 18.44,8 19,8M5.5,18.25C5.5,16.18 8.41,14.5 12,14.5C15.59,14.5 18.5,16.18 18.5,18.25V20H5.5V18.25M0,20V18.5C0,17.11 1.89,15.94 4.45,15.6C3.86,16.28 3.5,17.22 3.5,18.25V20H0M24,20H20.5V18.25C20.5,17.22 20.14,16.28 19.55,15.6C22.11,15.94 24,17.11 24,18.5V20Z"/></svg>`,
+  `<svg viewBox="0 0 24 24"><path class="icon" d="M12,2C14.3,2 16.3,4 16.3,6.2C16.21,8.77 14.34,9.83 14.04,10C15.04,9.5 16.5,9.5 16.5,9.5C19,9.5 21,11.3 21,13.8C21,16.3 19,18 16.5,18C16.5,18 15,18 13,17C13,17 12.7,19 15,22H9C11.3,19 11,17 11,17C9,18 7.5,18 7.5,18C5,18 3,16.3 3,13.8C3,11.3 5,9.5 7.5,9.5C7.5,9.5 8.96,9.5 9.96,10C9.66,9.83 7.79,8.77 7.7,6.2C7.7,4 9.7,2 12,2Z"/></svg>`,
+  `<svg viewBox="0 0 24 24"><path class="icon" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/></svg>`,
+  `<svg viewBox="0 0 24 24"><path class="icon" d="M19,12L12,22L5,12L12,2"/></svg>`
+];
+
+let cards = [...symbols, ...symbols];
+let flippedCards = [];
+let matchedPairs = 0;
+let moves = 0;
+let gameStarted = false;
+let timer;
+let seconds = 0;
+let canFlip = true;
+
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+function createBoard() {
+  const gameBoard = document.getElementById('gameBoard');
+  shuffle(cards);
+  
+  cards.forEach((symbol, index) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.index = index;
+    
+    card.innerHTML = `
+      <div class="card-face card-front">${symbol}</div>
+      <div class="card-face card-back">
+        <svg viewBox="0 0 24 24">
+          <path class="icon" d="M19,13H5V11H19V13Z" />
+        </svg>
+      </div>
+    `;
+    
+    card.addEventListener('click', flipCard);
+    gameBoard.appendChild(card);
+  });
+}
+
+function flipCard() {
+  if (!gameStarted) {
+    startGame();
+  }
+  
+  if (!canFlip || 
+      flippedCards.length === 2 || 
+      flippedCards.includes(this) || 
+      this.classList.contains('matched')) {
+    return;
+  }
+  
+  this.classList.add('flipped');
+  flippedCards.push(this);
+  
+  if (flippedCards.length === 2) {
+    canFlip = false;
+    moves++;
+    document.getElementById('moves').textContent = moves;
+    checkMatch();
+  }
+}
+
+function checkMatch() {
+  const [card1, card2] = flippedCards;
+  const match = card1.querySelector('.card-front').innerHTML === 
+                card2.querySelector('.card-front').innerHTML;
+  
+  setTimeout(() => {
+    if (match) {
+      card1.classList.add('matched');
+      card2.classList.add('matched');
+      matchedPairs++;
+      document.getElementById('matches').textContent = matchedPairs;
+      
+      if (matchedPairs === symbols.length) {
+        endGame();
+      }
+    } else {
+      card1.classList.remove('flipped');
+      card2.classList.remove('flipped');
+    }
+    
+    flippedCards = [];
+    canFlip = true;
+  }, 1000);
+}
+
+function startGame() {
+  gameStarted = true;
+  timer = setInterval(() => {
+    seconds++;
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    document.getElementById('timer').textContent = 
+      `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  }, 1000);
+}
+
+function endGame() {
+  clearInterval(timer);
+  document.querySelector('.game-container').classList.add('win-animation');
+  createSnowfall();
+}
+
+function createSnowfall() {
+  const snow = document.getElementById('snow');
+  for (let i = 0; i < 50; i++) {
+    const snowflake = document.createElement('div');
+    snowflake.style.cssText = `
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: white;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: snowfall ${Math.random() * 3 + 2}s linear infinite;
+      left: ${Math.random() * 100}vw;
+      top: -10px;
+      opacity: ${Math.random() * 0.7 + 0.3};
+      filter: blur(1px);
+    `;
+    snow.appendChild(snowflake);
+  }
+}
+
+createBoard();
+</script>
+</body>
+</html>
