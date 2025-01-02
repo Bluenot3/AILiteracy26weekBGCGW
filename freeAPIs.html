@@ -1,0 +1,524 @@
+<html>
+<head>
+    <base href="/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --content-width: min(100vw - 2rem, 1200px);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            width: 100vw;
+            overflow-x: hidden;
+            font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background: linear-gradient(135deg, #f6f8fc 0%, #ffffff 100%);
+            min-height: 100vh;
+        }
+
+        .category-container {
+            transition: all 0.3s ease;
+        }
+
+        .category-header {
+            transition: background-color 0.2s ease;
+        }
+
+        .category-header:hover {
+            background-color: #f3f4f6;
+        }
+
+        .api-card {
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .api-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-color: #e5e7eb;
+        }
+
+        .chevron {
+            transition: transform 0.3s ease;
+        }
+
+        .rotate {
+            transform: rotate(180deg);
+        }
+
+        .category-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .category-content.active {
+            max-height: 2000px;
+            transition: max-height 0.5s ease-in;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #f6f8fc 0%, #ffffff 100%);
+        }
+
+        .hover-scale {
+            transition: transform 0.2s ease;
+        }
+
+        .hover-scale:hover {
+            transform: scale(1.02);
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        
+        @media (max-width: 768px) {
+            .category-container {
+                margin: 1rem;
+            }
+            
+            .category-header h2 {
+                font-size: 1.25rem;
+            }
+            
+            .api-card {
+                padding: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="particles-js"></div>
+    
+    <div class="max-w-6xl mx-auto p-6 space-y-8">
+        <header class="text-center mb-12 pt-8 animate__animated animate__fadeIn">
+            <h1 class="text-5xl font-bold text-gray-800 mb-4">
+                <span class="animate-float inline-block">&#x1f680;</span> 
+                Free API Directory
+            </h1>
+            <p class="text-gray-600 text-xl">A curated collection of free APIs for developers</p>
+        </header>
+
+        <main class="space-y-4">
+            <div id="categories" class="grid gap-4 animate__animated animate__fadeIn">
+                <!-- Categories will be inserted here by JavaScript -->
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"></script>
+    <script>const categories = [{
+  title: "General APIs",
+  emoji: "🔧",
+  apis: [{
+    name: "VirusTotal API",
+    emoji: "🦠",
+    description: "Malware analysis and URL scanning",
+    link: "https://developers.virustotal.com/reference"
+  }, {
+    name: "Reddit API",
+    emoji: "🤖",
+    description: "Access Reddit posts, comments, and more",
+    link: "https://www.reddit.com/dev/api/"
+  }, {
+    name: "NASA API",
+    emoji: "🔭",
+    description: "Space data including images, Mars rover data",
+    link: "https://api.nasa.gov/"
+  }, {
+    name: "OpenWeatherMap API",
+    emoji: "🌦️",
+    description: "Current weather and forecast data",
+    link: "https://openweathermap.org/api"
+  }, {
+    name: "News API",
+    emoji: "📰",
+    description: "Access live news articles",
+    link: "https://newsapi.org/"
+  }, {
+    name: "GitHub API",
+    emoji: "🐙",
+    description: "Interact with GitHub repositories",
+    link: "https://docs.github.com/en/rest"
+  }, {
+    name: "OneDrive API",
+    emoji: "📂",
+    description: "Access and manage OneDrive storage",
+    link: "https://docs.microsoft.com/en-us/onedrive/developer/rest-api/"
+  }]
+}, {
+  title: "Fun & Entertainment",
+  emoji: "🎮",
+  apis: [{
+    name: "Chuck Norris Jokes API",
+    emoji: "😂",
+    description: "Random jokes",
+    link: "https://api.chucknorris.io/"
+  }, {
+    name: "Dogs API",
+    emoji: "🐶",
+    description: "Random dog images and facts",
+    link: "https://dog.ceo/dog-api/"
+  }, {
+    name: "Giphy API",
+    emoji: "🎉",
+    description: "Access trending and random GIFs",
+    link: "https://developers.giphy.com/"
+  }, {
+    name: "Movie (OMDb API)",
+    emoji: "🍿",
+    description: "Fetch movie details and ratings",
+    link: "https://www.omdbapi.com/"
+  }, {
+    name: "Pokemon (PokeAPI)",
+    emoji: "🎮",
+    description: "Pokemon-related data",
+    link: "https://pokeapi.co/"
+  }]
+}, {
+  title: "Educational & Informative",
+  emoji: "📚",
+  apis: [{
+    name: "REST Countries API",
+    emoji: "🌍",
+    description: "Information about countries",
+    link: "https://restcountries.com/"
+  }, {
+    name: "Open Food Facts API",
+    emoji: "🍔",
+    description: "Data on food products",
+    link: "https://world.openfoodfacts.org/data"
+  }, {
+    name: "Dictionary API",
+    emoji: "📖",
+    description: "Definitions and word data",
+    link: "https://dictionaryapi.dev/"
+  }, {
+    name: "Quotes API",
+    emoji: "💬",
+    description: "Random or categorized quotes",
+    link: "https://quotes.rest/"
+  }]
+}, {
+  title: "Social & Communication",
+  emoji: "💬",
+  apis: [{
+    name: "OpenTrivia API",
+    emoji: "❓",
+    description: "Trivia questions for games",
+    link: "https://opentdb.com/api_config.php"
+  }, {
+    name: "Random User Generator API",
+    emoji: "👤",
+    description: "Generate random user data",
+    link: "https://randomuser.me/"
+  }, {
+    name: "Twitter API (v2)",
+    emoji: "🐦",
+    description: "Access tweets and trends",
+    link: "https://developer.twitter.com/en/docs/twitter-api"
+  }]
+}, {
+  title: "Technology & Development",
+  emoji: "💻",
+  apis: [{
+    name: "Placeholder API",
+    emoji: "🖼️",
+    description: "Placeholder images",
+    link: "https://jsonplaceholder.typicode.com/"
+  }, {
+    name: "Random Facts API",
+    emoji: "🧠",
+    description: "Interesting random facts",
+    link: "https://uselessfacts.jsph.pl/"
+  }, {
+    name: "IP Geolocation API",
+    emoji: "🌐",
+    description: "Locate IP addresses",
+    link: "https://ip-api.com/"
+  }, {
+    name: "Lorem Picsum API",
+    emoji: "🖼️",
+    description: "Random placeholder images",
+    link: "https://picsum.photos/"
+  }]
+}, {
+  title: "Specialized Niches",
+  emoji: "🎯",
+  apis: [{
+    name: "Zippopotam.us API",
+    emoji: "📬",
+    description: "Location data by postal code",
+    link: "https://www.zippopotam.us/"
+  }, {
+    name: "Numbers API",
+    emoji: "🔢",
+    description: "Facts about numbers",
+    link: "http://numbersapi.com/"
+  }, {
+    name: "MusicBrainz API",
+    emoji: "🎶",
+    description: "Music database",
+    link: "https://musicbrainz.org/doc/Development/XML_Web_Service/Version_2"
+  }, {
+    name: "Recipe API",
+    emoji: "🍴",
+    description: "Recipes and meal ideas",
+    link: "https://spoonacular.com/food-api"
+  }]
+}, {
+  title: "Finance & Business",
+  emoji: "💰",
+  apis: [{
+    name: "Currency Exchange API",
+    emoji: "💱",
+    description: "Real-time exchange rates",
+    link: "https://exchangerate-api.com/"
+  }, {
+    name: "CoinGecko API",
+    emoji: "🪙",
+    description: "Cryptocurrency data",
+    link: "https://www.coingecko.com/en/api"
+  }, {
+    name: "Alpha Vantage API",
+    emoji: "📊",
+    description: "Stock and financial data",
+    link: "https://www.alphavantage.co/"
+  }]
+}, {
+  title: "Health & Fitness",
+  emoji: "🏥",
+  apis: [{
+    name: "COVID-19 API",
+    emoji: "🦠",
+    description: "COVID-19 statistics",
+    link: "https://covid19api.com/"
+  }, {
+    name: "Nutritionix API",
+    emoji: "🍎",
+    description: "Nutritional data",
+    link: "https://www.nutritionix.com/business/api"
+  }]
+}];
+function createCategoryHTML(category, index) {
+  return `
+            <div class="category-container glass-effect rounded-xl overflow-hidden shadow-sm hover-scale">
+                <div class="category-header cursor-pointer p-6 flex items-center justify-between" onclick="toggleCategory(${index})">
+                    <div class="flex items-center gap-4">
+                        <span class="text-3xl">${category.emoji}</span>
+                        <h2 class="text-2xl font-semibold text-gray-800">${category.title}</h2>
+                    </div>
+                    <svg class="chevron w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </div>
+                <div class="category-content">
+                    <div class="p-6 grid gap-4">
+                        ${category.apis.map(api => `
+                            <a href="${api.link}" target="_blank" rel="noopener noreferrer" 
+                               class="api-card block p-4 rounded-lg bg-white hover:bg-gray-50">
+                                <div class="flex items-start gap-4">
+                                    <span class="text-2xl">${api.emoji}</span>
+                                    <div>
+                                        <h3 class="font-medium text-blue-600 mb-1">${api.name}</h3>
+                                        <p class="text-gray-600 text-sm">${api.description}</p>
+                                    </div>
+                                </div>
+                            </a>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+}
+function initializeDirectory() {
+  const categoriesContainer = document.getElementById('categories');
+  categories.forEach((category, index) => {
+    const categoryEl = document.createElement('div');
+    categoryEl.innerHTML = createCategoryHTML(category, index);
+    categoriesContainer.appendChild(categoryEl);
+    observer.observe(categoryEl);
+  });
+  particlesJS('particles-js', {
+    particles: {
+      number: {
+        value: 80,
+        density: {
+          enable: true,
+          value_area: 800
+        }
+      },
+      color: {
+        value: '#6366f1'
+      },
+      shape: {
+        type: 'circle'
+      },
+      opacity: {
+        value: 0.5,
+        random: false
+      },
+      size: {
+        value: 3,
+        random: true
+      },
+      line_linked: {
+        enable: true,
+        distance: 150,
+        color: '#6366f1',
+        opacity: 0.4,
+        width: 1
+      },
+      move: {
+        enable: true,
+        speed: 2,
+        direction: 'none',
+        random: false,
+        straight: false,
+        out_mode: 'out',
+        bounce: false
+      }
+    },
+    interactivity: {
+      detect_on: 'canvas',
+      events: {
+        onhover: {
+          enable: true,
+          mode: 'repulse'
+        },
+        onclick: {
+          enable: true,
+          mode: 'push'
+        },
+        resize: true
+      }
+    },
+    retina_detect: true
+  });
+}
+function toggleCategory(index) {
+  const categoryContainers = document.querySelectorAll('.category-container');
+  const categoryContent = categoryContainers[index].querySelector('.category-content');
+  const chevron = categoryContainers[index].querySelector('.chevron');
+  categoryContent.style.transition = 'max-height 0.5s ease-in-out';
+  categoryContent.classList.toggle('active');
+  chevron.classList.toggle('rotate');
+  if (categoryContent.classList.contains('active')) {
+    setTimeout(() => {
+      categoryContent.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest'
+      });
+    }, 100);
+  }
+}
+particlesJS('particles-js', {
+  particles: {
+    number: {
+      value: 80,
+      density: {
+        enable: true,
+        value_area: 800
+      }
+    },
+    color: {
+      value: '#6366f1'
+    },
+    shape: {
+      type: 'circle'
+    },
+    opacity: {
+      value: 0.5,
+      random: false
+    },
+    size: {
+      value: 3,
+      random: true
+    },
+    line_linked: {
+      enable: true,
+      distance: 150,
+      color: '#6366f1',
+      opacity: 0.4,
+      width: 1
+    },
+    move: {
+      enable: true,
+      speed: 2,
+      direction: 'none',
+      random: false,
+      straight: false,
+      out_mode: 'out',
+      bounce: false
+    }
+  },
+  interactivity: {
+    detect_on: 'canvas',
+    events: {
+      onhover: {
+        enable: true,
+        mode: 'repulse'
+      },
+      onclick: {
+        enable: true,
+        mode: 'push'
+      },
+      resize: true
+    }
+  },
+  retina_detect: true
+});
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('animate__fadeIn');
+      observer.unobserve(entry.target);
+    }
+  });
+});
+let lastScrollTop = 0;
+document.addEventListener('scroll', () => {
+  const st = window.pageYOffset || document.documentElement.scrollTop;
+  if (st > lastScrollTop) {
+    document.body.classList.add('scrolling-down');
+  } else {
+    document.body.classList.remove('scrolling-down');
+  }
+  lastScrollTop = st <= 0 ? 0 : st;
+});
+document.addEventListener('DOMContentLoaded', initializeDirectory);</script>
+    <style>html { scroll-behavior: smooth; }</style>
+</body>
+</html>
